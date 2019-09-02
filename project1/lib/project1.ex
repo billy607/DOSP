@@ -1,19 +1,31 @@
 defmodule Project1 do
 def main do
-	list=[1,2,3,4]
+	list=[1,2,5,4,6,0]
+	number=125460
 	len=length(list)
-	list1=of(list,0)
+	list1=of(list)
 	list1=Enum.map(list1,fn(x)->Enum.chunk_every(x,div(len,2)) end)
 	list1=Enum.map(list1,fn(x)->
 		Enum.map(x,fn(y)->(connect(y,1,0))
 	end)
 	end)
 	list2=[]
-	len1=length(list1)
-	list1=duplicate(list1,list2,len1)
-	IO.inspect(list1)
-	length(list1)
+#	len1=length(list1)
+#	list1=duplicate(list1,list2,len1)
+#	IO.inspect(list1)
+#	length(list1)
+	judge(list1,number)
 end
+
+def judge(list,number) do
+	list1=Enum.map(list,fn(x)->
+		if List.first(x)*List.last(x)== number&&(rem(List.first(x),10)!=0||rem(List.last(x),10)!=0) do x end
+	end)
+	list1=Enum.filter(list1, & !is_nil(&1))
+	len1=length(list1)
+	duplicate(list1,[],len1)
+end
+
 #查找重复并删除
 def duplicate(list1,list2,len1) when list1==[] do
 	list2=ifnil(list2)
@@ -54,13 +66,14 @@ def connect(list,n,num) do
 	connect(list,n,num)
   end
   
-def of([],n) do
+def of([]) do
     [[]]
 end
 
-def of(list,n) do
-    for h <- list, t <- of(list -- [h],n=n+1), do: [h | t]
+def of(list) do
+    for h <- list, t <- of(list -- [h]), do: [h | t]
 end
+
 
 
 end
