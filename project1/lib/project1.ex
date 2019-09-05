@@ -7,10 +7,15 @@ defmodule Worker do
 
 	def caculate do
 		receive do
-			{:get,x1,y1} -> 
+			{:get,n1,n2} -> 
 				res = []
-				IO.inspect(Enum.filter(Enum.map(x1..y1,fn(x)->res ++ findFangs(x) end), &!is_nil(&1)))
+				IO.inspect(Enum.filter(Enum.map(n1..n2,fn(x)->res ++ findFangs(x) end), &!is_nil(&1)))
 		end
+	end
+
+	def caRange(n1,n2) do
+		res = []
+		Enum.filter(Enum.map(n1..n2,fn(x)->res ++ findFangs(x) end), &!is_nil(&1))
 	end
 	
 	def findFangs(number) do
@@ -35,7 +40,7 @@ def isVamp(list,number) do
 		if List.first(x)*List.last(x) == number&&(rem(List.first(x),10)!=0||rem(List.last(x),10)!=0) do x end
 	end)
 	list1=Enum.filter(list1, & !is_nil(&1))
-	#list1=duplicate(list1,[])
+	list1=duplicate(Enum.uniq(list1),[])
 	if !Enum.empty?(list1) do
 		[{:number,number},{:fangs,list1}]
 	end
@@ -103,7 +108,7 @@ end
 end
 
 defmodule Boss do
-    def mGet(n1,n2) when n1+9999>=n2 do
+    def mGet(n1,n2) when n1+999>=n2 do
         #pid = self()
         actor = spawn(&Worker.caculate/0)
         send(actor, {:get,n1,n2})
@@ -111,7 +116,7 @@ defmodule Boss do
 
     def mGet(n1,n2) do
         #pid = self()    #get self process id
-        n3 = n1 + 9999
+        n3 = n1 + 999
         actor = spawn(&Worker.caculate/0)
         send(actor, {:get,n1,n3})
         n1 = n3 + 1
