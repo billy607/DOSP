@@ -1,7 +1,20 @@
-defmodule Project1 do
-def main do
-	list=[1,2,5,4,6,0]
-	number=125460
+defmodule Worker do
+    def test do
+        receive do
+            {:get,n1,n2} -> IO.puts("#{n1},#{n2}")
+        end
+    end
+
+	def caculate do
+		receive do
+			{:get,x1,y1} -> 
+				res = []
+				IO.inspect(Enum.filter(Enum.map(x1..y1,fn(x)->res ++ findFangs(x) end), &!is_nil(&1)))
+		end
+	end
+	
+	def findFangs(number) do
+	list=split(number,[])
 	len=length(list)
 	list1=of(list)
 	list1=Enum.map(list1,fn(x)->Enum.chunk_every(x,div(len,2)) end)
@@ -9,34 +22,36 @@ def main do
 		Enum.map(x,fn(y)->(connect(y,1,0))
 	end)
 	end)
-	list2=[]
+#	list2=[]
 #	len1=length(list1)
 #	list1=duplicate(list1,list2,len1)
 #	IO.inspect(list1)
 #	length(list1)
-	judge(list1,number)
+	isVamp(list1,number)
 end
 
-def judge(list,number) do
+def isVamp(list,number) do
 	list1=Enum.map(list,fn(x)->
-		if List.first(x)*List.last(x)== number&&(rem(List.first(x),10)!=0||rem(List.last(x),10)!=0) do x end
+		if List.first(x)*List.last(x) == number&&(rem(List.first(x),10)!=0||rem(List.last(x),10)!=0) do x end
 	end)
 	list1=Enum.filter(list1, & !is_nil(&1))
-	len1=length(list1)
-	duplicate(list1,[],len1)
+	#list1=duplicate(list1,[])
+	if !Enum.empty?(list1) do
+		[{:number,number},{:fangs,list1}]
+	end
 end
 
 #查找重复并删除
-def duplicate(list1,list2,len1) when list1==[] do
+def duplicate(list1,list2) when list1==[] do
 	list2=ifnil(list2)
 	list2
 end
 
-def duplicate(list1,list2,len1) do
+def duplicate(list1,list2) do
 	x=hd(list1)
 	list2=list2++(Enum.map(list1--[x],fn(y)->
 			if List.first(x)==List.last(y)&&List.last(x)==List.first(y) do x end end))
-	duplicate(list1--[hd(list1)],list2,len1)
+	duplicate(list1--[hd(list1)],list2)
 	
 end
 #删除空值
@@ -51,6 +66,17 @@ def ifnil(list) do
 	end
 	
 end
+
+#将数字拆开
+def split(num,list) when num == 0 do
+	Enum.reverse(list)
+end
+
+def split(num,list) do
+	list = list ++ [rem(num,10)]
+	split(div(num,10),list)
+end
+
 #将数字连接起来
 def connect(list,n,num) when list==[]do
 	num
@@ -64,8 +90,9 @@ def connect(list,n,num) do
 	n=1
 	list=list--[hd(list)]
 	connect(list,n,num)
-  end
-  
+end
+
+#find all permutations  
 def of([]) do
     [[]]
 end
@@ -73,36 +100,21 @@ end
 def of(list) do
     for h <- list, t <- of(list -- [h]), do: [h | t]
 end
-
-
-
-end
-
-defmodule Worker do
-    def test1 do
-        receive do
-            {:get,n1,n2} -> IO.puts("#{n1},#{n2}")
-        end
-    end
-
-    def caculate(n1,n2) do
-
-    end
 end
 
 defmodule Boss do
-    def mGet(n1,n2) when n1+10000>=n2 do
+    def mGet(n1,n2) when n1+9999>=n2 do
         #pid = self()
-        actor = spawn(&Worker.test1/0)
+        actor = spawn(&Worker.caculate/0)
         send(actor, {:get,n1,n2})
     end
 
     def mGet(n1,n2) do
         #pid = self()    #get self process id
-        n3 = n1 + 10000
-        actor = spawn(&Worker.test1/0)
+        n3 = n1 + 9999
+        actor = spawn(&Worker.caculate/0)
         send(actor, {:get,n1,n3})
-        n1 = n3
+        n1 = n3 + 1
         mGet(n1,n2)
     end
 end
