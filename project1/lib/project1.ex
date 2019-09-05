@@ -8,14 +8,16 @@ defmodule Worker do
 	def caculate do
 		receive do
 			{:get,n1,n2} -> 
-				res = []
-				IO.inspect(Enum.filter(Enum.map(n1..n2,fn(x)->res ++ findFangs(x) end), &!is_nil(&1)))
+				list = []
+				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
 		end
 	end
 
 	def caRange(n1,n2) do
-		res = []
-		Enum.filter(Enum.map(n1..n2,fn(x)->res ++ findFangs(x) end), &!is_nil(&1))
+		list = []
+		res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+		if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
 	end
 	
 	def findFangs(number) do
@@ -42,7 +44,7 @@ def isVamp(list,number) do
 	list1=Enum.filter(list1, & !is_nil(&1))
 	list1=duplicate(Enum.uniq(list1),[])
 	if !Enum.empty?(list1) do
-		[{:number,number},{:fangs,list1}]
+		List.flatten([number]++List.flatten(list1))
 	end
 end
 
