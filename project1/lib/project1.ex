@@ -1,25 +1,16 @@
 defmodule Worker do
     def test do
 		receive do
-			{:get,n1,n2} ->
-				list = []
-				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
-				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
-			{:last,n1,n2,caller} -> 
-				list = []
-				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
-				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+			{:get,n1,n2,caller} ->
+				:timer.sleep(500)
+				IO.puts("#{n1},#{n2}")
 				send caller,{:finish}
         end
     end
 
 	def caculate do
 		receive do
-			{:get,n1,n2} ->
-				list = []
-				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
-				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
-			{:last,n1,n2,caller} -> 
+			{:get,n1,n2,caller} -> 
 				list = []
 				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
 				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
@@ -123,25 +114,48 @@ end
 end
 
 defmodule Boss do
-    def mGet(n1,n2) when n1+9999>=n2 do
-        pid = self()
-        actor = spawn(&Worker.test/0)
-		send(actor, {:last,n1,n2,pid})
+	def mGet(n1,n2) when n1+999>=n2 do
+		pid = self()
+        actor = spawn(&Worker.caculate/0)
+		send(actor, {:get,n1,n2,pid})
 		IO.puts("finish")
-		waitSignal()
+		waitSignal(n2/1000)
     end
 
 	def mGet(n1,n2) do
-        n3 = n1 + 9999
-        actor = spawn(&Worker.test/0)
-        send(actor, {:get,n1,n3})
+		pid = self()
+		n3 = n1 + 999
+        actor = spawn(&Worker.caculate/0)
+        send(actor, {:get,n1,n3,pid})
         n1 = n3 + 1
         mGet(n1,n2)
 	end
-	
-	def waitSignal do
+
+	def waitSignal(n) do
 		receive do
 			{:finish} -> true
 		end
+		if n != 0 do
+			waitSignal(n-1)
+		end
 	end
 end
+
+#defmodule Main do
+#	def start(n1,n2) do
+#		mid = self()
+#		boss = spawn(Boss, :mGet, [n1,n2,mid])
+#		n = div(n2,10000)-div(n1,10000)+1
+#		waitSignal(n)
+#	end
+#
+#	def waitSignal(n) when n == 0 do
+#		IO.puts("finish000")
+#	end
+#	def waitSignal(n) do
+#		IO.puts(n)
+#		receive do
+#			{:finish} -> waitSignal(n-1)
+#		end
+#	end
+#end
