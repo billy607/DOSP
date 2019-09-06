@@ -89,7 +89,7 @@ def split(num,list) do
 end
 
 #将数字连接起来
-def connect(list,n,num) when list==[]do
+def connect(list,_n,num) when list==[]do
 	num
 end
 
@@ -97,7 +97,6 @@ def connect(list,n,num) do
 	len=length(list)
 	n=n*(:math.pow(10,len-1) |> round)
 	num=hd(list)*n+num
-#	IO.puts(num)
 	n=1
 	list=list--[hd(list)]
 	connect(list,n,num)
@@ -114,21 +113,20 @@ end
 end
 
 defmodule Boss do
-	def mGet(n1,n2) when n1+999>=n2 do
+	def mGet(n1,n2,numThreads) when n1+999>=n2 do
 		pid = self()
         actor = spawn(&Worker.caculate/0)
 		send(actor, {:get,n1,n2,pid})
-		IO.puts("finish")
-		waitSignal(n2/1000)
+		waitSignal(numThreads)
     end
 
-	def mGet(n1,n2) do
+	def mGet(n1,n2,numThreads) do
 		pid = self()
 		n3 = n1 + 999
         actor = spawn(&Worker.caculate/0)
         send(actor, {:get,n1,n3,pid})
         n1 = n3 + 1
-        mGet(n1,n2)
+        mGet(n1,n2,numThreads)
 	end
 
 	def waitSignal(n) do
@@ -137,6 +135,8 @@ defmodule Boss do
 		end
 		if n != 0 do
 			waitSignal(n-1)
+		else
+			:timer.sleep(1000)
 		end
 	end
 end
