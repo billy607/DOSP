@@ -1,16 +1,29 @@
 defmodule Worker do
     def test do
-        receive do
-            {:get,n1,n2} -> IO.puts("#{n1},#{n2}")
+		receive do
+			{:get,n1,n2} ->
+				list = []
+				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+			{:last,n1,n2,caller} -> 
+				list = []
+				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+				send caller,{:finish}
         end
     end
 
 	def caculate do
 		receive do
-			{:get,n1,n2} -> 
+			{:get,n1,n2} ->
 				list = []
 				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
 				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+			{:last,n1,n2,caller} -> 
+				list = []
+				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+				send caller,{:finish}
 		end
 	end
 
@@ -110,18 +123,25 @@ end
 end
 
 defmodule Boss do
-    def mGet(n1,n2) when n1+999>=n2 do
-        #pid = self()
-        actor = spawn(&Worker.caculate/0)
-        send(actor, {:get,n1,n2})
+    def mGet(n1,n2) when n1+9999>=n2 do
+        pid = self()
+        actor = spawn(&Worker.test/0)
+		send(actor, {:last,n1,n2,pid})
+		IO.puts("finish")
+		waitSignal()
     end
 
-    def mGet(n1,n2) do
-        #pid = self()    #get self process id
-        n3 = n1 + 999
-        actor = spawn(&Worker.caculate/0)
+	def mGet(n1,n2) do
+        n3 = n1 + 9999
+        actor = spawn(&Worker.test/0)
         send(actor, {:get,n1,n3})
         n1 = n3 + 1
         mGet(n1,n2)
-    end
+	end
+	
+	def waitSignal do
+		receive do
+			{:finish} -> true
+		end
+	end
 end
