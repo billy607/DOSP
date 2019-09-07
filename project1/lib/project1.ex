@@ -1,4 +1,17 @@
 defmodule Worker do
+	use GenServer
+	def init(bRange) do
+		{:ok,bRange}
+	end
+	def start_link(bid,n1,n2) do
+		GenServer.start_link(__MODULE__,[bid,n1,n2])
+	end
+
+	def caculate(pid) do
+		GenServer.cast(pid,:caculate)
+	end
+
+
     def test do
 		receive do
 			{:get,n1,n2,caller} ->
@@ -8,14 +21,16 @@ defmodule Worker do
         end
     end
 
-	def caculate do
-		receive do
-			{:get,n1,n2,caller} -> 
-				list = []
-				res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
-				if res != [] , do: Enum.each(res,fn(x)->IO.puts(Enum.join(x," ")) end)
-				send caller,{:finish}
-		end
+	def handle_cast(:caculate,bRange) do
+		bid = hd(bRange)
+		range = tl(bRange)
+		n1=hd(range)
+		n2=List.last(range)
+		list = []
+		res = Enum.filter(Enum.map(n1..n2,fn(x)->list ++ findFangs(x) end), &!is_nil(&1))
+		Boss.print(bid,res)
+		#if res != [] , do: res=Enum.map(res,fn(x)->Enum.join(x," ") end)
+		{:noreply,range}		
 	end
 
 	def caRange(n1,n2) do
@@ -113,31 +128,47 @@ end
 end
 
 defmodule Boss do
-	def mGet(n1,n2,numThreads) when n1+999>=n2 do
-		pid = self()
-        actor = spawn(&Worker.caculate/0)
-		send(actor, {:get,n1,n2,pid})
-		waitSignal(numThreads)
-    end
+	use GenServer
 
-	def mGet(n1,n2,numThreads) do
-		pid = self()
-		n3 = n1 + 999
-        actor = spawn(&Worker.caculate/0)
-        send(actor, {:get,n1,n3,pid})
-        n1 = n3 + 1
-        mGet(n1,n2,numThreads)
+	def start_link(count,pid,n1,n2) do
+		GenServer.start_link(__MODULE__,[count,pid,n1,n2])
 	end
 
-	def waitSignal(n) do
-		receive do
-			{:finish} -> true
+	def init(list) do
+		range = tl(tl(list))
+		n1 = hd(range)
+		n2 = List.last(range)
+		mGet(n1,n2)
+		{:ok,list}
+	end
+
+	def mGet(n1,n2) when n1+999>=n2 do
+		bid = self()
+		{:ok,pid}=Worker.start_link(bid,n1,n2)
+		Worker.caculate(pid)
+    end
+
+	def mGet(n1,n2) do
+		n3 = n1 + 999
+		bid = self()
+		{:ok,pid}=Worker.start_link(bid,n1,n3)
+		Worker.caculate(pid)
+		n1 = n3 + 1
+		mGet(n1,n2)
+	end
+
+	def print(pid, res) do
+		GenServer.cast(pid, {:return, res})
+	end
+
+	def handle_cast({:return, res}, list) do
+		count = hd(list)
+		if res != [] , do: Enum.map(res,fn(x)->IO.puts(Enum.join(x," ")) end)
+		tail = tl(list)
+		if count-1 == 0 do
+			send hd(tl(list)),{:finish}
 		end
-		if n != 0 do
-			waitSignal(n-1)
-		else
-			:timer.sleep(1000)
-		end
+		{:noreply,[count-1] ++ tail}
 	end
 end
 
@@ -159,3 +190,34 @@ end
 #		end
 #	end
 #end
+
+defmodule Stack do
+	use GenServer
+  
+	# Client
+  
+	def start_link(default) do
+	  GenServer.start_link(__MODULE__, default)
+	end
+
+	# Server (callbacks)
+  
+	@impl true
+	def init(counter) do
+		IO.puts("im initialized by ")
+		IO.inspect(counter)
+		{:ok, counter}
+	end
+  
+
+	def test(pid,exsID) do
+		GenServer.cast(pid, {:test,exsID})
+	end
+
+	@impl true
+	def handle_cast({:test,pid}, kk) do
+		:timer.sleep(2000)
+		send pid,{:finish}
+		{:noreply, kk}
+	  end
+  end
