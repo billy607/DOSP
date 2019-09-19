@@ -142,14 +142,14 @@ defmodule Boss do
 		{:ok,list}
 	end
 
-	def mGet(n1,n2) when n1+999>=n2 do
+	def mGet(n1,n2) when n1+99999>=n2 do
 		bid = self()
 		{:ok,pid}=Worker.start_link(bid,n1,n2)
 		Worker.caculate(pid)
     end
 
 	def mGet(n1,n2) do
-		n3 = n1 + 999
+		n3 = n1 + 99999
 		bid = self()
 		{:ok,pid}=Worker.start_link(bid,n1,n3)
 		Worker.caculate(pid)
@@ -176,7 +176,7 @@ end
 #	def start(n1,n2) do
 #		mid = self()
 #		boss = spawn(Boss, :mGet, [n1,n2,mid])
-#		n = div(n2,10000)-div(n1,10000)+1
+#		n = div(n2,100000000)-div(n1,1000000)+1
 #		waitSignal(n)
 #	end
 #

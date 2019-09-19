@@ -15,17 +15,17 @@ if n1<10 do
 		send self(),{:finish}
 	else 
 		n1 = 10
-		if rem((n2-n1+1),1000) != 0 do
-			Boss.start_link(div((n2-n1+1),1000)+1,pid,n1,n2)
+		if rem((n2-n1+1),100000) != 0 do
+			Boss.start_link(div((n2-n1+1),100000)+1,pid,n1,n2)
 		else
-			Boss.start_link(div((n2-n1+1),1000),pid,n1,n2)
+			Boss.start_link(div((n2-n1+1),100000),pid,n1,n2)
 		end
     end
 else
-	if rem((n2-n1+1),1000) != 0 do
-		Boss.start_link(div((n2-n1+1),1000)+1,pid,n1,n2)
+	if rem((n2-n1+1),100000) != 0 do
+		Boss.start_link(div((n2-n1+1),100000)+1,pid,n1,n2)
 	else
-		Boss.start_link(div((n2-n1+1),1000),pid,n1,n2)
+		Boss.start_link(div((n2-n1+1),100000),pid,n1,n2)
     end
 end
 Wait.waitSignal
