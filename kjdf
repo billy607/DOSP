@@ -1,0 +1,71 @@
+[33mcommit 7b5229ff08d8c78c8bba57a09ece87cb9afe8df5[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Sat Sep 7 18:13:01 2019 -0400
+
+    p1 final final
+
+[33mcommit 55ef948bf62e33a7746c56c68acd7a82d6317ed5[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Fri Sep 6 19:33:24 2019 -0400
+
+    p1 final
+
+[33mcommit 6dc6a050e8b1fa8f2f27406794e597835e63275e[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Fri Sep 6 17:15:35 2019 -0400
+
+    add some bugs
+
+[33mcommit 4663434322261d3f8f885dd9e601e125aa370556[m
+Author: Enyang Wang <enyang.wang@ufl.edu>
+Date:   Fri Sep 6 14:14:12 2019 -0700
+
+    add some bugs
+
+[33mcommit 0d2592e37350a777ff49845d6cf13eabe5b5e824[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Thu Sep 5 16:00:42 2019 -0400
+
+    can run by 'mix run',but inconsistent output
+
+[33mcommit c34847c8b2925d6945e977940f436a21197ea5f4[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Thu Sep 5 14:16:00 2019 -0400
+
+    fix output format
+
+[33mcommit ddd66f88c53b9affcdb482793e2bf737d97127d7[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Thu Sep 5 11:14:52 2019 -0400
+
+    fix duplicate output, add function for outputing in on thread
+
+[33mcommit d8f2c5eef75a963a8286fc676c197bada8a4b6ff[m
+Author: Enyang Wang <enyang.wang@ufl.edu>
+Date:   Thu Sep 5 00:30:01 2019 -0700
+
+    worker can find all vamp num in a range. But have duplicate output on some number
+
+[33mcommit 9dded5a90b585826496c869672c05381499c5881[m
+Author: Ziqi Liu <1459665333@qq.com>
+Date:   Mon Sep 2 13:50:55 2019 -0400
+
+    find vampire number
+
+[33mcommit ba6c21c9ea8cbf474656a1f13e332492d5dfaac9[m
+Author: Ziqi Liu <1459665333@qq.com>
+Date:   Mon Sep 2 11:03:46 2019 -0400
+
+    find all combinations
+
+[33mcommit 842fb46502412d566bd3446510064b3a9c331020[m
+Author: Ziqi Liu <1459665333@qq.com>
+Date:   Mon Sep 2 11:02:02 2019 -0400
+
+    test
+
+[33mcommit f7d4e091f3941f91d06cc9b1ec9330e08bfee323[m
+Author: Enyang Wang <billywang19960607@gmal.com>
+Date:   Fri Aug 30 15:03:38 2019 -0400
+
+    first commit
