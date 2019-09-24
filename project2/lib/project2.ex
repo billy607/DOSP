@@ -41,7 +41,25 @@ defmodule Pro2 do
 	end
 	def push_sum(nNum,topology) do
 		IO.puts("push_sum")
-	
+		list=Enum.to_list 1..nNum
+		plist=[]
+		plist=plist++Enum.map(list,fn(x)->
+			IO.inspect(x,label: "aaa")
+			{:ok, pid}=Node.start_link(plist,x,1,0)
+			pid
+		end)
+		Enum.map(plist,fn(x)->
+			case topology do
+				"full"->Node.update(x,full(x,plist))
+				"line"->IO.puts(" ")
+				"rand2D"->IO.puts(" ")
+				"torus"->IO.puts(" ")
+				"honeycomb"->IO.puts(" ")
+				"ranhoneycomb"->IO.puts(" ")
+			end
+		end)
+		first=List.first(plist)
+		Node.send_sum(first)
 	end
 		
 ###########################################topology
@@ -79,8 +97,14 @@ defmodule Node do
 	def receive(pid,message) do
 		GenServer.cast(pid, {:receive,pid, message})
 	end
+	def receive_sum(pid,s,w) do
+		GenServer.cast(pid, {:receive_sum,s,w})
+	end
 	def send(pid) do
 		GenServer.cast(pid, {:send})
+	end
+	def send_sum(pid) do
+		GenServer.cast(pid, {:send_sum})
 	end
 	def update_minus(pid,newneighbor) do
 		GenServer.cast(pid, {:update_minus,newneighbor})
@@ -96,35 +120,68 @@ defmodule Node do
 		neighbor=hd(list)--[newneighbor] 
 		list=List.replace_at(list,0,neighbor)
 		if Enum.empty?(neighbor) do 
-			IO.inspect(self(), label: "done")
-			send :main,{:finish}
+			IO.inspect(self(), label: "done1")
 			Process.exit(self(),:normal) 
 		end
 		{:noreply, list}
 	end
 	def handle_cast({:send},list) do
-		#last=List.last(list)
 		des=Enum.random(hd(list))
 		Node.receive(des,"hello")
 		Node.send(self())
 		{:noreply, list}
 	end
+	def handle_cast({:send_sum}, list) do
+		s=Enum.at(list,1)
+		w=Enum.at(list,2)
+		des=Enum.random(hd(list))
+		Node.receive_sum(des,s/2,w/2)
+		list=List.replace_at(list,1,s/2)
+		list=List.replace_at(list,2,w/2)
+		Node.send_sum(self())
+		{:noreply, list}
+	end
 	def handle_cast({:receive, pid, message},list) do
+		send :main,{:finish}
+		IO.inspect(self(),label: "receive")
 		last=List.last(list)
 		last=last+1
-		#IO.puts(last)
 		list=List.replace_at(list,3,last)
 		if message=="hello" do
 			if last==10 do
-				#IO.inspect(hd(list)++self())
 				IO.inspect(self(), label: "done")
 				Enum.each(hd(list),fn(x)->Node.update_minus(x,self())end)
-				send :main,{:finish}
-				#IO.inspect("111111")
 				Process.exit(pid,:normal)
 			end
 		end
 		Node.send(pid)
+		{:noreply, list}
+	end
+	def handle_cast({:receive_sum,s,w},list) do
+			IO.inspect(self())
+		last=List.last(list)
+		olds=Enum.at(list,1)
+		oldw=Enum.at(list,2)
+		s=s+olds
+		w=w+oldw
+		list=List.replace_at(list,1,s)
+		list=List.replace_at(list,2,w)
+		minus=abs(s/w-olds/oldw)
+		
+		if minus<=:math.pow(10,-10) do 
+			last=last+1
+			list=List.replace_at(list,3,last) 
+			if last==3 do
+				IO.inspect(self(), label: "done")
+				Enum.each(hd(list),fn(x)->Node.update_minus(x,self())end)
+				send :main,{:finish}
+				Process.exit(self(),:normal)
+			end
+		else
+			list=List.replace_at(list,3,0)
+		end
+		IO.puts(List.last(list))
+		Node.send_sum(self())
 		{:noreply, list}
 	end
 end
