@@ -1,5 +1,8 @@
 defmodule Pro2 do
-	def main(nNum,topology,algorithm) do
+	def main(args) do
+		nNum = Enum.at(args,0) |> String.to_integer()
+		topology  = Enum.at(args,1)
+		algorithm = Enum.at(args,2)
 		Process.register(self(),:main)
 		case algorithm do
 			"gossip"->Pro2.gossip(nNum,topology)
@@ -7,6 +10,16 @@ defmodule Pro2 do
 		end
 		waitSignal(1)
 	end 
+
+	def start(nNum,topology,algorithm) do
+		Process.register(self(),:main)
+		case algorithm do
+			"gossip"->Pro2.gossip(nNum,topology)
+			"push_sum"->Pro2.push_sum(nNum,topology)
+		end
+		waitSignal(1)
+	end
+	
 	def waitSignal(n) when n==0 do
 		IO.puts("finish")
 	end
@@ -16,72 +29,7 @@ defmodule Pro2 do
 			{:finish}->waitSignal(n-1)
 		end
 	end
-	
-#############################################algorithm
-	def gossip(nNum,topology) do
-		IO.puts("gossip")
-		list=Enum.to_list 1..nNum
-		plist=[]
-		plist=plist++Enum.map(list,fn(x)->
-			{:ok, pid}=Node.start_link(plist,0,0,0)
-			pid
-		end)
-		Enum.map(plist,fn(x)->
-			case topology do
-				"full"->Node.update(x,full(x,plist))
-				"line"->IO.puts(" ")
-				"rand2D"->IO.puts(" ")
-				"torus"->IO.puts(" ")
-				"honeycomb"->IO.puts(" ")
-				"ranhoneycomb"->IO.puts(" ")
-			end
-		end)
-		first=List.first(plist)
-		Node.send(first)
-	end
-	def push_sum(nNum,topology) do
-		IO.puts("push_sum")
-		list=Enum.to_list 1..nNum
-		plist=[]
-		plist=plist++Enum.map(list,fn(x)->
-			IO.inspect(x,label: "aaa")
-			{:ok, pid}=Node.start_link(plist,x,1,0)
-			pid
-		end)
-		Enum.map(plist,fn(x)->
-			case topology do
-				"full"->Node.update(x,full(x,plist))
-				"line"->IO.puts(" ")
-				"rand2D"->IO.puts(" ")
-				"torus"->IO.puts(" ")
-				"honeycomb"->IO.puts(" ")
-				"ranhoneycomb"->IO.puts(" ")
-			end
-		end)
-		first=List.first(plist)
-		Node.send_sum(first)
-	end
-		
-###########################################topology
-	def full(pid,plist) do
-		plist=plist--[pid]
-	end
-	def line() do
-	
-	end
-	def rand2D() do
-	
-	end
-	def torus() do
-	
-	end
-	def honeycomb() do
-	
-	end
-	def ranhoneycomb() do
-	
-	end
-end
+
 ##########################################genserver Node
 defmodule Node do
 	use GenServer
@@ -185,5 +133,71 @@ defmodule Node do
 			end
 		Node.send_sum(self())
 		{:noreply, list}
+	end
+end
+	
+#############################################algorithm
+	def gossip(nNum,topology) do
+		IO.puts("gossip")
+		list=Enum.to_list 1..nNum
+		plist=[]
+		plist=plist++Enum.map(list,fn(x)->
+			{:ok, pid}=Node.start_link(plist,0,0,0)
+			pid
+		end)
+		Enum.map(plist,fn(x)->
+			case topology do
+				"full"->Node.update(x,full(x,plist))
+				"line"->IO.puts(" ")
+				"rand2D"->IO.puts(" ")
+				"torus"->IO.puts(" ")
+				"honeycomb"->IO.puts(" ")
+				"ranhoneycomb"->IO.puts(" ")
+			end
+		end)
+		first=List.first(plist)
+		Node.send(first)
+	end
+	def push_sum(nNum,topology) do
+		IO.puts("push_sum")
+		list=Enum.to_list 1..nNum
+		plist=[]
+		plist=plist++Enum.map(list,fn(x)->
+			IO.inspect(x,label: "aaa")
+			{:ok, pid}=Node.start_link(plist,x,1,0)
+			pid
+		end)
+		Enum.map(plist,fn(x)->
+			case topology do
+				"full"->Node.update(x,full(x,plist))
+				"line"->IO.puts(" ")
+				"rand2D"->IO.puts(" ")
+				"torus"->IO.puts(" ")
+				"honeycomb"->IO.puts(" ")
+				"ranhoneycomb"->IO.puts(" ")
+			end
+		end)
+		first=List.first(plist)
+		Node.send_sum(first)
+	end
+		
+###########################################topology
+	def full(pid,plist) do
+		plist=plist--[pid]
+	end
+	def line() do
+	
+	end
+	def rand2D() do
+	
+	end
+	def torus() do
+	
+	end
+	def honeycomb() do
+	
+	end
+	def ranhoneycomb() do
+	
 	end
 end
