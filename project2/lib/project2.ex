@@ -114,20 +114,13 @@ defmodule Node do
 		{:noreply, list}
 	end
 	def handle_cast({:receive_sum,s,w},[neighbor,olds,oldw,last]) do
-		#last=List.last(list)
-		#olds=Enum.at(list,1)
-		#oldw=Enum.at(list,2)
-		s=s+olds
-		w=w+oldw
+		ns=s+olds
+		nw=w+oldw
 		IO.inspect([self(),s,w,s/w],label: "pid,s,w,s/w")
-		#list=List.replace_at(list,1,s)
-		#list=List.replace_at(list,2,w)
-		minus=abs(s/w-olds/oldw)
+		minus=Kernel.abs(ns/nw-olds/oldw)
 		last=
-			if minus<=:math.pow(10,-10) do 
-				#last=last+1
-				#list=List.replace_at(list,3,last) 
-				if last+1==3 do
+			if minus<=:math.pow(10,-10) do  
+				if last==2 do
 					IO.inspect(self(), label: "done with no change")
 					Enum.each(neighbor,fn(x)->Node.update_minus(x,self())end)
 					send :main,{:finish}
@@ -135,11 +128,10 @@ defmodule Node do
 				end
 				last+1
 			else
-				#List.replace_at(list,3,0)
 				0
 			end
 		Node.send_sum(self())
-		{:noreply, [neighbor,s,w,last]}
+		{:noreply, [neighbor,ns,nw,last]}
 	end
 end
 	
