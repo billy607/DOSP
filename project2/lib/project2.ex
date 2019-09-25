@@ -13,14 +13,20 @@ defmodule Pro2 do
 
 	def start(nNum,topology,algorithm) do
 		Process.register(self(),:main)
-		case algorithm do
-			"gossip"->Pro2.gossip(nNum,topology)
-			"push_sum"->Pro2.push_sum(nNum,topology)
-		end
-		waitSignal(1)
+		n = 
+			case algorithm do
+				"gossip"->
+					Pro2.gossip(nNum,topology)
+					nNum
+				"push_sum"->
+					Pro2.push_sum(nNum,topology)
+					1
+			end
+		waitSignal(n)
 	end
 	
 	def waitSignal(n) when n==0 do
+		:timer.sleep(10)
 		IO.puts("finish")
 	end
 	def waitSignal(n) do
@@ -68,7 +74,7 @@ defmodule Node do
 		neighbor=hd(list)--[newneighbor] 
 		list=List.replace_at(list,0,neighbor)
 		if Enum.empty?(neighbor) do 
-			IO.inspect(self(), label: "done1")
+			IO.inspect(self(), label: "done_no_neighbor")
 			Process.exit(self(),:normal) 
 		end
 		{:noreply, list}
@@ -87,7 +93,7 @@ defmodule Node do
 		Node.receive_sum(des,s/2,w/2)
 		list=List.replace_at(list,1,s/2)
 		list=List.replace_at(list,2,w/2)
-		:timer.sleep(10)
+		:timer.sleep(1)
 		Node.send_sum(self())
 		{:noreply, list}
 	end
@@ -99,7 +105,7 @@ defmodule Node do
 		list=List.replace_at(list,3,last)
 		if message=="hello" do
 			if last==10 do
-				IO.inspect(self(), label: "done")
+				IO.inspect(self(), label: "done_heard_10")
 				Enum.each(hd(list),fn(x)->Node.update_minus(x,self())end)
 				Process.exit(pid,:normal)
 			end
@@ -107,32 +113,33 @@ defmodule Node do
 		Node.send(pid)
 		{:noreply, list}
 	end
-	def handle_cast({:receive_sum,s,w},list) do
-		last=List.last(list)
-		olds=Enum.at(list,1)
-		oldw=Enum.at(list,2)
+	def handle_cast({:receive_sum,s,w},[neighbor,olds,oldw,last]) do
+		#last=List.last(list)
+		#olds=Enum.at(list,1)
+		#oldw=Enum.at(list,2)
 		s=s+olds
 		w=w+oldw
-		IO.inspect([self(),s,w],label: "pid")
-		list=List.replace_at(list,1,s)
-		list=List.replace_at(list,2,w)
+		IO.inspect([self(),s,w,s/w],label: "pid,s,w,s/w")
+		#list=List.replace_at(list,1,s)
+		#list=List.replace_at(list,2,w)
 		minus=abs(s/w-olds/oldw)
-		list=
+		last=
 			if minus<=:math.pow(10,-10) do 
-				last=last+1
-				list=List.replace_at(list,3,last) 
-				if last==3 do
-					IO.inspect(self(), label: "done")
-					Enum.each(hd(list),fn(x)->Node.update_minus(x,self())end)
+				#last=last+1
+				#list=List.replace_at(list,3,last) 
+				if last+1==3 do
+					IO.inspect(self(), label: "done with no change")
+					Enum.each(neighbor,fn(x)->Node.update_minus(x,self())end)
 					send :main,{:finish}
 					Process.exit(self(),:normal)
 				end
-				list
+				last+1
 			else
-				list=List.replace_at(list,3,0)
+				#List.replace_at(list,3,0)
+				0
 			end
 		Node.send_sum(self())
-		{:noreply, list}
+		{:noreply, [neighbor,s,w,last]}
 	end
 end
 	
@@ -141,7 +148,7 @@ end
 		IO.puts("gossip")
 		list=Enum.to_list 1..nNum
 		plist=[]
-		plist=plist++Enum.map(list,fn(x)->
+		plist=plist++Enum.map(list,fn(_x)->
 			{:ok, pid}=Node.start_link(plist,0,0,0)
 			pid
 		end)
@@ -183,7 +190,7 @@ end
 		
 ###########################################topology
 	def full(pid,plist) do
-		plist=plist--[pid]
+		plist--[pid]
 	end
 	def line() do
 	
