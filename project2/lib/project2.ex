@@ -94,7 +94,13 @@ defmodule Pro2 do
 						[xvalue,yvalue]
 					end)
 					Enum.map(1..nNum,fn(x)-> 
-						Node.update(Enum.at(plist,x),Topology.rand2D(Enum.at(plist,x),x,coordinate,plist,nNum)) 
+						neighbor=Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)
+						if x==1&&Enum.empty?(neighbor) do
+							send :main,{:error0}
+							:timer.sleep(10)
+							Process.exit(self(),:kill)
+						end
+						Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 					end)
             	"torus"->IO.puts(" ")
             	"honeycomb"->IO.puts(" ")
