@@ -33,6 +33,7 @@ defmodule Pro2 do
 		IO.puts(n)
 		receive do
 			{:finish}->waitSignal(n-1)
+			{:error0}->IO.puts("First node do not have neighbors")
 		end
 	end
 
@@ -45,16 +46,30 @@ defmodule Pro2 do
         	{:ok, pid}=Node.start_link(plist,0,0,0)
         	pid
     	end)
-    	Enum.map(plist,fn(x)->
-        	case topology do
-            	"full"->Node.update(x,Topology.full(x,plist))
-            	"line"->IO.puts(" ")
-            	"rand2D"->IO.puts(" ")
-            	"torus"->IO.puts(" ")
-            	"honeycomb"->IO.puts(" ")
-            	"ranhoneycomb"->IO.puts(" ")
-        	end
-    	end)
+		case topology do
+			"full"->
+				Enum.map(plist,fn(x)-> Node.update(x,Topology.full(x,plist)) end)
+			"line"->IO.puts(" ")
+			"rand2D"->
+				coordinate=[]
+				coordinate=coordinate++Enum.map(plist,fn(x)-> 				
+					xvalue=Enum.random(0..1000)/1000 
+					yvalue=Enum.random(0..1000)/1000 
+					[xvalue,yvalue]
+				end)
+				Enum.map(1..nNum,fn(x)-> 
+					neighbor=Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)
+					if x==1&&Enum.empty?(neighbor) do
+						send :main,{:error0}
+						:timer.sleep(10)
+						Process.exit(self(),:kill)
+					end
+					Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
+				end)
+			"torus"->IO.puts(" ")
+			"honeycomb"->IO.puts(" ")
+			"ranhoneycomb"->IO.puts(" ")
+		end  	
     	first=List.first(plist)
     	Node.send(first)
 	end
@@ -71,7 +86,16 @@ defmodule Pro2 do
         	case topology do
             	"full"->Node.update(x,Topology.full(x,plist))
             	"line"->IO.puts(" ")
-            	"rand2D"->IO.puts(" ")
+            	"rand2D"->
+					coordinate=[]
+					coordinate=coordinate++Enum.map(plist,fn(x)-> 				
+						xvalue=Enum.random(0..1000)/1000 
+						yvalue=Enum.random(0..1000)/1000 
+						[xvalue,yvalue]
+					end)
+					Enum.map(1..nNum,fn(x)-> 
+						Node.update(Enum.at(plist,x),Topology.rand2D(Enum.at(plist,x),x,coordinate,plist,nNum)) 
+					end)
             	"torus"->IO.puts(" ")
             	"honeycomb"->IO.puts(" ")
             	"ranhoneycomb"->IO.puts(" ")

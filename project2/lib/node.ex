@@ -28,6 +28,10 @@ defmodule Node do
 	
 	
 	def handle_cast({:update,newneighbor},list) do
+		if Enum.empty?(newneighbor) do
+			send :main,{:finish}
+			Process.exit(self(),:normal)
+		end
 		neighbor=hd(list)++newneighbor
 		list=List.replace_at(list,0,neighbor)
 		{:noreply, list}
