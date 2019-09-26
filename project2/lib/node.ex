@@ -51,12 +51,12 @@ defmodule Node do
 	def handle_cast({:send_sum}, list) do
 		s=Enum.at(list,1)
 		w=Enum.at(list,2)
-		des=Enum.random(hd(list))
-		Node.receive_sum(des,s/2,w/2)
 		list=List.replace_at(list,1,s/2)
 		list=List.replace_at(list,2,w/2)
-		:timer.sleep(1)
-		Node.send_sum(self())
+		des=Enum.random(hd(list))
+		Node.receive_sum(des,s/2,w/2)
+		:timer.sleep(20)
+		#Node.send_sum(self())
 		{:noreply, list}
 	end
 	def handle_cast({:receive, pid, message},list) do
