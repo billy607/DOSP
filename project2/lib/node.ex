@@ -28,6 +28,7 @@ defmodule Node do
 	
 	
 	def handle_cast({:update,newneighbor},list) do
+		IO.inspect([self(),newneighbor],label: "pid,nei")
 		if Enum.empty?(newneighbor) do
 			send :main,{:finish}
 			Process.exit(self(),:normal)

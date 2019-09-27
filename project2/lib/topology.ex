@@ -2,8 +2,17 @@ defmodule Topology do
     def full(pid,plist) do
         plist--[pid]
     end
-    def line() do
-    
+	def line(pid,plist) do
+		index = Enum.find_index(plist,fn x -> x == pid end)
+        if index == 0 do
+            [Enum.at(plist,index+1)]
+        else 
+            if index == length(plist)-1 do
+                [Enum.at(plist,index-1)]
+            else
+                [Enum.at(plist,index-1),Enum.at(plist,index+1)]
+            end
+        end
     end
     def rand2D(pid,pnum,coordinate,plist,nNum) do
 		list=Enum.to_list 1..nNum

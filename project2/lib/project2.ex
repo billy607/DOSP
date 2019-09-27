@@ -13,16 +13,15 @@ defmodule Pro2 do
 
 	def start(nNum,topology,algorithm) do
 		Process.register(self(),:main)
-		n = 
-			case algorithm do
-				"gossip"->
-					Pro2.gossip(nNum,topology)
-					nNum
-				"push_sum"->
-					Pro2.push_sum(nNum,topology)
-					1
-			end
-		waitSignal(n)
+		case algorithm do
+			"gossip"->
+				Pro2.gossip(nNum,topology)
+				waitSignal(nNum)
+			"push_sum"->
+				Pro2.push_sum(nNum,topology)
+				waitPushSum()
+		end
+		
 	end
 	
 	def waitSignal(n) when n==0 do
@@ -30,10 +29,19 @@ defmodule Pro2 do
 		IO.puts("finish")
 	end
 	def waitSignal(n) do
-		IO.puts(n)
 		receive do
 			{:finish}->waitSignal(n-1)
-			{:error0}->IO.puts("First node do not have neighbors")
+		after
+			3000->
+				waitSignal(0)
+		end
+	end
+
+	def waitPushSum() do
+		receive do
+			{:finish}->
+				:timer.sleep(10)
+				IO.puts("finish")
 		end
 	end
 
@@ -49,7 +57,9 @@ defmodule Pro2 do
 		case topology do
 			"full"->
 				Enum.map(plist,fn(x)-> Node.update(x,Topology.full(x,plist)) end)
-			"line"->IO.puts(" ")
+			"line"->
+				#Enum.map(plist,fn(x)->IO.inspect(Topology.line(x,plist),label: "neighbor") end)
+				Enum.map(plist,fn(x)-> Node.update(x,Topology.line(x,plist)) end)
 			"rand2D"->
 				coordinate=[]
 				coordinate=coordinate++Enum.map(plist,fn(x)-> 				
@@ -60,9 +70,9 @@ defmodule Pro2 do
 				Enum.map(1..nNum,fn(x)-> 
 					neighbor=Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)
 					if x==1&&Enum.empty?(neighbor) do
-						send :main,{:error0}
+						IO.puts("First node do not have neighbors")
 						:timer.sleep(10)
-						Process.exit(self(),:kill)
+						Process.exit(self(),:normal)
 					end
 					Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 				end)
@@ -82,10 +92,11 @@ defmodule Pro2 do
         	{:ok, pid}=Node.start_link(plist,x,1,0)
         	pid
     	end)
-    	Enum.map(plist,fn(x)->
-        	case topology do
-            	"full"->Node.update(x,Topology.full(x,plist))
-            	"line"->IO.puts(" ")
+		case topology do
+				"full"->
+					Enum.map(plist,fn(x)-> Node.update(x,Topology.full(x,plist)) end)
+				"line"->
+					Enum.map(plist,fn(x)-> Node.update(x,Topology.line(x,plist)) end)
             	"rand2D"->
 					coordinate=[]
 					coordinate=coordinate++Enum.map(plist,fn(x)-> 				
@@ -96,17 +107,16 @@ defmodule Pro2 do
 					Enum.map(1..nNum,fn(x)-> 
 						neighbor=Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)
 						if x==1&&Enum.empty?(neighbor) do
-							send :main,{:error0}
+							IO.puts("First node do not have neighbors")
 							:timer.sleep(10)
-							Process.exit(self(),:kill)
+							Process.exit(self(),:normal)
 						end
 						Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 					end)
             	"torus"->IO.puts(" ")
             	"honeycomb"->IO.puts(" ")
             	"ranhoneycomb"->IO.puts(" ")
-        	end
-    	end)
+        end
     	first=List.first(plist)
     	Node.send_sum(first)
 	end
