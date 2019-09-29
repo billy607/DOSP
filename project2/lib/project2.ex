@@ -77,8 +77,40 @@ defmodule Pro2 do
 					Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 				end)
 			"torus"->IO.puts(" ")
-			"honeycomb"->IO.puts(" ")
-			"ranhoneycomb"->IO.puts(" ")
+			"honeycomb"->
+				coordinate=[]
+				coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
+					x=x-1
+					line=div(x,6)
+					r=rem(x,6)
+					num=div(r,2)
+					yvalue=
+						if r==1||r==2||r==5 do (2*line+1)*:math.sqrt(3) else 2*line*:math.sqrt(3) end
+					xvalue=
+						#if rem(num,2)==0 do 3*num else 3*num+1 end
+						num+r
+					[xvalue,yvalue]
+				end)
+				Enum.map(1..nNum,fn(x)-> 
+					Node.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+				end)
+			"randhoneycomb"->
+				coordinate=[]
+				coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
+					x=x-1
+					line=div(x,6)
+					r=rem(x,6)
+					num=div(r,2)
+					yvalue=
+						if r==1||r==2||r==5 do (2*line+1)*:math.sqrt(3) else 2*line*:math.sqrt(3) end
+					xvalue=
+						#if rem(num,2)==0 do 3*num else 3*num+1 end
+						num+r
+					[xvalue,yvalue]
+				end)
+				Enum.map(1..nNum,fn(x)-> 
+					Node.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+				end)
 		end  	
     	first=List.first(plist)
     	Node.send(first)
@@ -114,8 +146,40 @@ defmodule Pro2 do
 						Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 					end)
             	"torus"->IO.puts(" ")
-            	"honeycomb"->IO.puts(" ")
-            	"ranhoneycomb"->IO.puts(" ")
+            	"honeycomb"->
+					coordinate=[]
+					coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
+						x=x-1
+						line=div(x,6)
+						r=rem(x,6)
+						num=div(r,2)
+						yvalue=
+							if r==1||r==2||r==5 do (2*line+1)*:math.sqrt(3) else 2*line*:math.sqrt(3) end
+						xvalue=
+							#if rem(num,2)==0 do 3*num else 3*num+1 end
+							num+r
+						[xvalue,yvalue]
+					end)
+					Enum.map(1..nNum,fn(x)-> 
+						Node.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+					end)
+            	"randhoneycomb"->
+					coordinate=[]
+					coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
+						x=x-1
+						line=div(x,6)
+						r=rem(x,6)
+						num=div(r,2)
+						yvalue=
+							if r==1||r==2||r==5 do (2*line+1)*:math.sqrt(3) else 2*line*:math.sqrt(3) end
+						xvalue=
+							#if rem(num,2)==0 do 3*num else 3*num+1 end
+							num+r
+						[xvalue,yvalue]
+					end)
+					Enum.map(1..nNum,fn(x)-> 
+						Node.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+					end)
         end
     	first=List.first(plist)
     	Node.send_sum(first)

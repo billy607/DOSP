@@ -34,10 +34,47 @@ defmodule Topology do
     def torus() do
     
     end
-    def honeycomb() do
-    
+    def honeycomb(pid,pnum,coordinate,plist,nNum) do
+		list=Enum.to_list 1..nNum
+		c=Enum.at(coordinate,pnum-1)
+		cx=List.first(c)
+		cy=List.last(c)
+		plist=plist--Enum.map(list,fn(x)->
+			c=Enum.at(coordinate,x-1)
+			p=Enum.at(plist,x-1)
+			dx=List.first(c)-cx
+			dy=List.last(c)-cy
+			if :math.pow(dx,2)+:math.pow(dy,2)>4 do
+				p
+			end	
+		end)
+		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		plist--[pid]
     end
-    def ranhoneycomb() do
-    
+    def randhoneycomb(pid,pnum,coordinate,plist,nNum) do
+		list=Enum.to_list 1..nNum
+		c=Enum.at(coordinate,pnum-1)
+		cx=List.first(c)
+		cy=List.last(c)
+		l=[]
+		l=l++Enum.map(list,fn(x)->
+			c=Enum.at(coordinate,x-1)
+			p=Enum.at(plist,x-1)
+			dx=List.first(c)-cx
+			dy=List.last(c)-cy
+			if :math.pow(dx,2)+:math.pow(dy,2)>4 do
+				p
+			end	
+		end)
+		l=Enum.filter(l,fn(x)->!is_nil(x) end)
+		node=
+			if !Enum.empty?(l) do Enum.random(l) end
+		IO.inspect(node,label: "node")
+		plist=plist--l
+		plist=
+			if !is_nil(node) do 
+				plist++[node] else plist end
+		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		plist--[pid]
     end
 end
