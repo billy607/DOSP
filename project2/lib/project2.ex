@@ -5,10 +5,13 @@ defmodule Pro2 do
 		algorithm = Enum.at(args,2)
 		Process.register(self(),:main)
 		case algorithm do
-			"gossip"->Pro2.gossip(nNum,topology)
-			"push_sum"->Pro2.push_sum(nNum,topology)
+			"gossip"->
+				Pro2.gossip(nNum,topology)
+				waitSignal(nNum)
+			"push_sum"->
+				Pro2.push_sum(nNum,topology)
+				waitPushSum()
 		end
-		waitSignal(1)
 	end 
 
 	def start(nNum,topology,algorithm) do
@@ -33,6 +36,7 @@ defmodule Pro2 do
 			{:finish}->waitSignal(n-1)
 		after
 			3000->
+				IO.inspect(n, label: "Unreached node number")
 				waitSignal(0)
 		end
 	end

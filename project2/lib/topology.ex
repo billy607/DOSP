@@ -43,7 +43,7 @@ defmodule Topology do
         neighbor = neighbor ++ if index >= n*n*(n-1) ,do: [Enum.at(plist,index - n*n*(n-1))], else: [Enum.at(plist,index + n*n)]
 		neighbor = neighbor ++ if rem(index,n*n) < n ,do: [Enum.at(plist,index + n*(n-1))], else: [Enum.at(plist,index - n)]
 		neighbor = neighbor ++ if rem(index,n*n) >= n*(n-1) ,do: [Enum.at(plist,index - n*(n-1))], else: [Enum.at(plist,index + n)]
-		neighbor
+		neighbor = Enum.uniq(Enum.filter(neighbor--[pid], fn x -> !is_nil(x) end))
 		IO.inspect(neighbor,label: "myneighbor")
     end
     def honeycomb(pid,pnum,coordinate,plist,nNum) do
