@@ -1,5 +1,5 @@
 ##########################################genserver Node
-defmodule Node do
+defmodule MyNode do
 	use GenServer
 	def init(list) do
 		{:ok,list}
@@ -48,9 +48,9 @@ defmodule Node do
 	end
 	def handle_cast({:send},list) do
 		des=Enum.random(hd(list))
-		Node.receive(des,"hello")
+		MyNode.receive(des,"hello")
 		:timer.sleep(10)
-		Node.send(self())
+		MyNode.send(self())
 		{:noreply, list}
 	end
 	def handle_cast({:send_sum}, list) do
@@ -59,9 +59,9 @@ defmodule Node do
 		list=List.replace_at(list,1,s/2)
 		list=List.replace_at(list,2,w/2)
 		des=Enum.random(hd(list))
-		Node.receive_sum(des,s/2,w/2)
+		MyNode.receive_sum(des,s/2,w/2)
 		:timer.sleep(20)
-		#Node.send_sum(self())
+		#MyNode.send_sum(self())
 		{:noreply, list}
 	end
 	def handle_cast({:receive, pid, message},list) do
@@ -73,11 +73,11 @@ defmodule Node do
 		if message=="hello" do
 			if last==10 do
 				IO.inspect(self(), label: "done_heard_10")
-				Enum.each(hd(list),fn(x)->Node.update_minus(x,self())end)
+				Enum.each(hd(list),fn(x)->MyNode.update_minus(x,self())end)
 				Process.exit(pid,:normal)
 			end
 		end
-		Node.send(pid)
+		MyNode.send(pid)
 		{:noreply, list}
 	end
 	def handle_cast({:receive_sum,s,w},[neighbor,olds,oldw,last]) do
@@ -89,7 +89,7 @@ defmodule Node do
 			if minus<=:math.pow(10,-10) do  
 				if last==2 do
 					IO.inspect(self(), label: "done with no change")
-					Enum.each(neighbor,fn(x)->Node.update_minus(x,self())end)
+					Enum.each(neighbor,fn(x)->MyNode.update_minus(x,self())end)
 					send :main,{:finish}
 					Process.exit(self(),:normal)
 				end
@@ -97,7 +97,7 @@ defmodule Node do
 			else
 				0
 			end
-		Node.send_sum(self())
+		MyNode.send_sum(self())
 		{:noreply, [neighbor,ns,nw,last]}
 	end
 end

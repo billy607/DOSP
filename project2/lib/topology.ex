@@ -31,8 +31,20 @@ defmodule Topology do
 		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
 		plist--[pid]
     end
-    def torus() do
-    
+	def torus(pid,plist) do
+		n = trunc(:math.ceil(:math.pow(length(plist),1/3)))
+		IO.inspect(n, label: "length")
+		index = Enum.find_index(plist,fn x -> x == pid end)
+		IO.inspect(index, label: "index")
+		neighbor = []
+		neighbor = neighbor ++ if rem(index,n) == 0 ,do: [Enum.at(plist,index + n - 1)], else: [Enum.at(plist,index - 1)]
+		neighbor = neighbor ++ if rem(index,n) == n-1 ,do: [Enum.at(plist,index - (n - 1))], else: [Enum.at(plist,index + 1)]
+		neighbor = neighbor ++ if index <= (n*n - 1) ,do: [Enum.at(plist,index + n*n*(n-1))], else: [Enum.at(plist,index - n*n)]
+        neighbor = neighbor ++ if index >= n*n*(n-1) ,do: [Enum.at(plist,index - n*n*(n-1))], else: [Enum.at(plist,index + n*n)]
+		neighbor = neighbor ++ if rem(index,n*n) < n ,do: [Enum.at(plist,index + n*(n-1))], else: [Enum.at(plist,index - n)]
+		neighbor = neighbor ++ if rem(index,n*n) >= n*(n-1) ,do: [Enum.at(plist,index - n*(n-1))], else: [Enum.at(plist,index + n)]
+		neighbor
+		IO.inspect(neighbor,label: "myneighbor")
     end
     def honeycomb(pid,pnum,coordinate,plist,nNum) do
 		list=Enum.to_list 1..nNum

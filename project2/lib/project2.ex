@@ -51,18 +51,17 @@ defmodule Pro2 do
     	list=Enum.to_list 1..nNum
     	plist=[]
     	plist=plist++Enum.map(list,fn(_x)->
-        	{:ok, pid}=Node.start_link(plist,0,0,0)
+        	{:ok, pid}=MyNode.start_link(plist,0,0,0)
         	pid
     	end)
 		case topology do
 			"full"->
-				Enum.map(plist,fn(x)-> Node.update(x,Topology.full(x,plist)) end)
+				Enum.map(plist,fn(x)-> MyNode.update(x,Topology.full(x,plist)) end)
 			"line"->
-				#Enum.map(plist,fn(x)->IO.inspect(Topology.line(x,plist),label: "neighbor") end)
-				Enum.map(plist,fn(x)-> Node.update(x,Topology.line(x,plist)) end)
+				Enum.map(plist,fn(x)-> MyNode.update(x,Topology.line(x,plist)) end)
 			"rand2D"->
 				coordinate=[]
-				coordinate=coordinate++Enum.map(plist,fn(x)-> 				
+				coordinate=coordinate++Enum.map(plist,fn(_x)-> 				
 					xvalue=Enum.random(0..1000)/1000 
 					yvalue=Enum.random(0..1000)/1000 
 					[xvalue,yvalue]
@@ -74,9 +73,11 @@ defmodule Pro2 do
 						:timer.sleep(10)
 						Process.exit(self(),:normal)
 					end
-					Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
+					MyNode.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 				end)
-			"torus"->IO.puts(" ")
+			"torus"->
+				IO.inspect(plist,label: "plist")
+				Enum.map(plist,fn(x)-> MyNode.update(x,Topology.torus(x,plist)) end)
 			"honeycomb"->
 				coordinate=[]
 				coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
@@ -92,7 +93,7 @@ defmodule Pro2 do
 					[xvalue,yvalue]
 				end)
 				Enum.map(1..nNum,fn(x)-> 
-					Node.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+					MyNode.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
 				end)
 			"randhoneycomb"->
 				coordinate=[]
@@ -109,11 +110,11 @@ defmodule Pro2 do
 					[xvalue,yvalue]
 				end)
 				Enum.map(1..nNum,fn(x)-> 
-					Node.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+					MyNode.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
 				end)
 		end  	
     	first=List.first(plist)
-    	Node.send(first)
+    	MyNode.send(first)
 	end
 	def push_sum(nNum,topology) do
     	IO.puts("push_sum")
@@ -121,17 +122,17 @@ defmodule Pro2 do
     	plist=[]
     	plist=plist++Enum.map(list,fn(x)->
         	IO.inspect(x,label: "aaa")
-        	{:ok, pid}=Node.start_link(plist,x,1,0)
+        	{:ok, pid}=MyNode.start_link(plist,x,1,0)
         	pid
     	end)
 		case topology do
 				"full"->
-					Enum.map(plist,fn(x)-> Node.update(x,Topology.full(x,plist)) end)
+					Enum.map(plist,fn(x)-> MyNode.update(x,Topology.full(x,plist)) end)
 				"line"->
-					Enum.map(plist,fn(x)-> Node.update(x,Topology.line(x,plist)) end)
+					Enum.map(plist,fn(x)-> MyNode.update(x,Topology.line(x,plist)) end)
             	"rand2D"->
 					coordinate=[]
-					coordinate=coordinate++Enum.map(plist,fn(x)-> 				
+					coordinate=coordinate++Enum.map(plist,fn(_x)-> 				
 						xvalue=Enum.random(0..1000)/1000 
 						yvalue=Enum.random(0..1000)/1000 
 						[xvalue,yvalue]
@@ -143,9 +144,11 @@ defmodule Pro2 do
 							:timer.sleep(10)
 							Process.exit(self(),:normal)
 						end
-						Node.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
+						MyNode.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 					end)
-            	"torus"->IO.puts(" ")
+				"torus"->
+					IO.inspect(plist, label: "plist")
+					Enum.map(plist,fn(x)-> MyNode.update(x,Topology.torus(x,plist)) end)
             	"honeycomb"->
 					coordinate=[]
 					coordinate=coordinate++Enum.map(1..nNum,fn(x)-> 
@@ -161,7 +164,7 @@ defmodule Pro2 do
 						[xvalue,yvalue]
 					end)
 					Enum.map(1..nNum,fn(x)-> 
-						Node.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+						MyNode.update(Enum.at(plist,x-1),Topology.honeycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
 					end)
             	"randhoneycomb"->
 					coordinate=[]
@@ -178,10 +181,10 @@ defmodule Pro2 do
 						[xvalue,yvalue]
 					end)
 					Enum.map(1..nNum,fn(x)-> 
-						Node.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
+						MyNode.update(Enum.at(plist,x-1),Topology.randhoneycomb(Enum.at(plist,x-1),x,coordinate,plist,nNum))
 					end)
         end
     	first=List.first(plist)
-    	Node.send_sum(first)
+    	MyNode.send_sum(first)
 	end
 end
