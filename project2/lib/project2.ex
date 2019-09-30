@@ -8,10 +8,14 @@ defmodule Pro2 do
 			case algorithm do
 				"gossip"->
 					Pro2.gossip(nNum,topology)
-					waitSignal(nNum)
+					{time,_} = :timer.tc(fn -> waitSignal(nNum) end)
+					IO.puts "Actual Time: #{time}"
+					:timer.sleep(10)
 				"push_sum"->
 					Pro2.push_sum(nNum,topology)
-					waitPushSum()
+					{time,_} = :timer.tc(fn -> waitPushSum() end)
+					IO.puts "Actual Time: #{time}"
+					:timer.sleep(10)
 			end
 		else
 			IO.puts("number should large than 1")
@@ -23,12 +27,14 @@ defmodule Pro2 do
 		case algorithm do
 			"gossip"->
 				Pro2.gossip(nNum,topology)
-				IO.puts("processing....")
-				waitSignal(nNum)
+				{time,_} = :timer.tc(fn -> waitSignal(nNum) end)
+				IO.puts "Actual Time: #{time}"
+				:timer.sleep(10)
 			"push_sum"->
 				Pro2.push_sum(nNum,topology)
-				IO.puts("Processing....")
-				waitPushSum()
+				{time,_} = :timer.tc(fn -> waitPushSum() end)
+				IO.puts "Actual Time: #{time}"
+				:timer.sleep(10)
 		end
 		
 	end
