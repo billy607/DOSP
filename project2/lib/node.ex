@@ -41,7 +41,7 @@ defmodule MyNode do
 		neighbor=hd(list)--[newneighbor] 
 		list=List.replace_at(list,0,neighbor)
 		if Enum.empty?(neighbor) do 
-			IO.inspect(self(), label: "done_no_neighbor")
+			#IO.inspect(self(), label: "done_no_neighbor")
 			Process.exit(self(),:normal) 
 		end
 		{:noreply, list}
@@ -66,13 +66,13 @@ defmodule MyNode do
 	end
 	def handle_cast({:receive, pid, message},list) do
 		send :main,{:finish}
-		IO.inspect(self(),label: "receive")
+		#IO.inspect(self(),label: "receive")
 		last=List.last(list)
 		last=last+1
 		list=List.replace_at(list,3,last)
 		if message=="hello" do
 			if last==10 do
-				IO.inspect(self(), label: "done_heard_10")
+				#IO.inspect(self(), label: "done_heard_10")
 				Enum.each(hd(list),fn(x)->MyNode.update_minus(x,self())end)
 				Process.exit(pid,:normal)
 			end
@@ -88,7 +88,7 @@ defmodule MyNode do
 		last=
 			if minus<=:math.pow(10,-10) do  
 				if last==2 do
-					IO.inspect(self(), label: "done with no change")
+					#IO.inspect(self(), label: "done with no change")
 					Enum.each(neighbor,fn(x)->MyNode.update_minus(x,self())end)
 					send :main,{:finish}
 					Process.exit(self(),:normal)

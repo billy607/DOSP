@@ -1,16 +1,20 @@
 defmodule Pro2 do
 	def main(args) do
 		nNum = Enum.at(args,0) |> String.to_integer()
-		topology  = Enum.at(args,1)
-		algorithm = Enum.at(args,2)
-		Process.register(self(),:main)
-		case algorithm do
-			"gossip"->
-				Pro2.gossip(nNum,topology)
-				waitSignal(nNum)
-			"push_sum"->
-				Pro2.push_sum(nNum,topology)
-				waitPushSum()
+		if nNum>1 do 
+			topology  = Enum.at(args,1)
+			algorithm = Enum.at(args,2)
+			Process.register(self(),:main)
+			case algorithm do
+				"gossip"->
+					Pro2.gossip(nNum,topology)
+					waitSignal(nNum)
+				"push_sum"->
+					Pro2.push_sum(nNum,topology)
+					waitPushSum()
+			end
+		else
+			IO.puts("number should large than 1")
 		end
 	end 
 
@@ -19,9 +23,11 @@ defmodule Pro2 do
 		case algorithm do
 			"gossip"->
 				Pro2.gossip(nNum,topology)
+				IO.puts("processing....")
 				waitSignal(nNum)
 			"push_sum"->
 				Pro2.push_sum(nNum,topology)
+				IO.puts("Processing....")
 				waitPushSum()
 		end
 		
@@ -80,7 +86,7 @@ defmodule Pro2 do
 					MyNode.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 				end)
 			"torus"->
-				IO.inspect(plist,label: "plist")
+				#IO.inspect(plist,label: "plist")
 				Enum.map(plist,fn(x)-> MyNode.update(x,Topology.torus(x,plist)) end)
 			"honeycomb"->
 				coordinate=[]
@@ -125,7 +131,6 @@ defmodule Pro2 do
     	list=Enum.to_list 1..nNum
     	plist=[]
     	plist=plist++Enum.map(list,fn(x)->
-        	IO.inspect(x,label: "aaa")
         	{:ok, pid}=MyNode.start_link(plist,x,1,0)
         	pid
     	end)
@@ -151,7 +156,7 @@ defmodule Pro2 do
 						MyNode.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
 					end)
 				"torus"->
-					IO.inspect(plist, label: "plist")
+					#IO.inspect(plist, label: "plist")
 					Enum.map(plist,fn(x)-> MyNode.update(x,Topology.torus(x,plist)) end)
             	"honeycomb"->
 					coordinate=[]
