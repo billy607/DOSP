@@ -49,7 +49,7 @@ defmodule Pro2 do
 
 	def waitPushSum() do
 		receive do
-			{:finish}->
+			{:finish1}->
 				:timer.sleep(10)
 				IO.puts("finish")
 		end
@@ -153,7 +153,7 @@ defmodule Pro2 do
 							:timer.sleep(10)
 							Process.exit(self(),:normal)
 						end
-						MyNode.update(Enum.at(plist,x-1),Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)) 
+						MyNode.update(Enum.at(plist,x-1),neighbor) 
 					end)
 				"torus"->
 					#IO.inspect(plist, label: "plist")

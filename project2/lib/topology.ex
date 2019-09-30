@@ -28,7 +28,7 @@ defmodule Topology do
 				p
 			end	
 		end)
-		#IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
 		plist--[pid]
     end
 	def torus(pid,plist) do
@@ -60,7 +60,7 @@ defmodule Topology do
 				p
 			end	
 		end)
-		#IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
 		plist--[pid]
     end
     def randhoneycomb(pid,pnum,coordinate,plist,nNum) do

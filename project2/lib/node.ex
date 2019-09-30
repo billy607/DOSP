@@ -90,7 +90,7 @@ defmodule MyNode do
 				if last==2 do
 					#IO.inspect(self(), label: "done with no change")
 					Enum.each(neighbor,fn(x)->MyNode.update_minus(x,self())end)
-					send :main,{:finish}
+					send :main,{:finish1}
 					Process.exit(self(),:normal)
 				end
 				last+1
