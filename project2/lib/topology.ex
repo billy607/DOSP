@@ -28,7 +28,7 @@ defmodule Topology do
 				p
 			end	
 		end)
-		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		#IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
 		plist--[pid]
     end
 	def torus(pid,plist) do
@@ -43,7 +43,7 @@ defmodule Topology do
         neighbor = neighbor ++ if index >= n*n*(n-1) ,do: [Enum.at(plist,index - n*n*(n-1))], else: [Enum.at(plist,index + n*n)]
 		neighbor = neighbor ++ if rem(index,n*n) < n ,do: [Enum.at(plist,index + n*(n-1))], else: [Enum.at(plist,index - n)]
 		neighbor = neighbor ++ if rem(index,n*n) >= n*(n-1) ,do: [Enum.at(plist,index - n*(n-1))], else: [Enum.at(plist,index + n)]
-		neighbor = Enum.uniq(Enum.filter(neighbor--[pid], fn x -> !is_nil(x) end))
+		Enum.uniq(Enum.filter(neighbor--[pid], fn x -> !is_nil(x) end))
 		#IO.inspect(neighbor,label: "myneighbor")
     end
     def honeycomb(pid,pnum,coordinate,plist,nNum) do
@@ -60,7 +60,7 @@ defmodule Topology do
 				p
 			end	
 		end)
-		IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
+		#IO.inspect([pid,plist--[pid]],label: "pid and neighbor")
 		plist--[pid]
     end
     def randhoneycomb(pid,pnum,coordinate,plist,nNum) do

@@ -60,7 +60,7 @@ defmodule MyNode do
 		list=List.replace_at(list,2,w/2)
 		des=Enum.random(hd(list))
 		MyNode.receive_sum(des,s/2,w/2)
-		:timer.sleep(20)
+		#:timer.sleep(20)
 		#MyNode.send_sum(self())
 		{:noreply, list}
 	end
@@ -83,13 +83,13 @@ defmodule MyNode do
 	def handle_cast({:receive_sum,s,w},[neighbor,olds,oldw,last]) do
 		ns=s+olds
 		nw=w+oldw
-		IO.inspect([self(),s,w,s/w],label: "pid,s,w,s/w")
+		#IO.inspect([self(),ns,nw,ns/nw],label: "pid,ns,nw,ns/nw")
 		minus=Kernel.abs(ns/nw-olds/oldw)
 		last=
 			if minus<=:math.pow(10,-10) do  
 				if last==2 do
 					#IO.inspect(self(), label: "done with no change")
-					Enum.each(neighbor,fn(x)->MyNode.update_minus(x,self())end)
+					#Enum.each(neighbor,fn(x)->MyNode.update_minus(x,self())end)
 					send :main,{:finish1}
 					Process.exit(self(),:normal)
 				end
