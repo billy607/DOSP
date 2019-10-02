@@ -72,7 +72,7 @@ defmodule Pro2 do
         	pid
 		end)
 		#############################failed node
-		pFlist = Enum.take_random(plist--[hd(list)],nFail)
+		pFlist = Enum.take_random(plist--[hd(plist)],nFail)
 		IO.inspect(pFlist,label: "faild nodes")
 		Enum.map(pFlist,fn(x) -> MyNode.faild(x,"gossip") end)
 
@@ -147,7 +147,7 @@ defmodule Pro2 do
         	pid
 		end)
 		#############################failed node
-		pFlist = Enum.take_random(plist--[hd(list)],nFail)
+		pFlist = Enum.take_random(plist--[hd(plist)],nFail)
 		IO.inspect(pFlist,label: "faild nodes")
 		Enum.map(pFlist,fn(x) -> MyNode.faild(x,"push_sum") end)
 		plist = plist -- pFlist
