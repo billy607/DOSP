@@ -115,7 +115,7 @@ defmodule MyNode do
 		{:noreply, list}
 	end
 	def handle_cast({:faild_pushsum},list) do
-		IO.inspect(self(),label: "faild node's pid")
+		#IO.inspect(self(),label: "faild node's pid")
 		Process.exit(self(),:normal)
 		{:noreply, list}
 	end

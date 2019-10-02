@@ -14,7 +14,8 @@ defmodule Topology do
             end
         end
     end
-    def rand2D(pid,pnum,coordinate,plist,nNum) do
+	def rand2D(pid,pnum,coordinate,plist,_nNum) do
+		nNum = Enum.count(coordinate)
 		list=Enum.to_list 1..nNum
 		c=Enum.at(coordinate,pnum-1)
 		cx=List.first(c)

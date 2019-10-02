@@ -151,6 +151,8 @@ defmodule Pro2 do
 		IO.inspect(pFlist,label: "faild nodes")
 		Enum.map(pFlist,fn(x) -> MyNode.faild(x,"push_sum") end)
 		plist = plist -- pFlist
+		plist = Enum.sort(plist)
+		IO.inspect(plist)
 
 		case topology do
 				"full"->
@@ -164,7 +166,7 @@ defmodule Pro2 do
 						yvalue=Enum.random(0..1000)/1000 
 						[xvalue,yvalue]
 					end)
-					Enum.map(1..nNum,fn(x)-> 
+					Enum.map(1..Enum.count(coordinate),fn(x)-> 
 						neighbor=Topology.rand2D(Enum.at(plist,x-1),x,coordinate,plist,nNum)
 						if x==1&&Enum.empty?(neighbor) do
 							IO.puts("First node do not have neighbors")
