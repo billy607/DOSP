@@ -152,7 +152,7 @@ defmodule Pro2 do
 		Enum.map(pFlist,fn(x) -> MyNode.faild(x,"push_sum") end)
 		plist = plist -- pFlist
 		plist = Enum.sort(plist)
-		IO.inspect(plist)
+		#IO.inspect(plist)
 
 		case topology do
 				"full"->
