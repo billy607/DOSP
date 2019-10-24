@@ -19,12 +19,34 @@ defmodule TNode do
     GenServer.cast(pid,{:routeToObj,guid,lvl,srcPid})
   end
 
+  def routeToNode(pid,nid,lvl,srcPid,numHop) do
+    GenServer.cast(pid,{:routeToNode,nid,lvl,srcPid,numHop})
+  end
+
   def publishObj(pid,guid,aid,lvl) do
     GenServer.cast(pid,{:publish,guid,aid,lvl})
   end
 
-  def receiveObjPID(pid) do
-    GenServer.cast(pid,{:receivePID})
+  def receiveObjPID(pid,numHop) do
+    GenServer.cast(pid,{:receivePID,numHop})
+  end
+
+  def handle_cast({:routeToNode,pid,nid,lvl,srcPid,numHop},list) do
+    mNid = List.first(list)
+    numHop = numHop + 1
+    if mNid == nid do
+      #send number of hops to srcPid
+    else
+      neighborMap = List.last(list)
+      neighbor = Enum.at(list,3)
+      nextN = nextHop(mNid,lvl,nid,neighborMap)
+      if nextN != mNid do
+        TNode.routeToNode(neighbor[nextN],nid,lvl+1,srcPid,numHop)
+      else
+        IO.puts("error0,cannot find such node")
+      end
+      {:noreply,list}
+    end
   end
 
   def handle_cast({:routeToObj,pid,guid,lvl,srcPid},list) do
@@ -41,8 +63,8 @@ defmodule TNode do
       else
         IO.puts("error0,no such object")
       end
+      {:noreply,list}
     end
-
   end
 
   def handle_cast({:publish,guid,aid,lvl},list) do
@@ -78,7 +100,7 @@ defmodule TNode do
     end
   end
 
-  def handle_cast({:receivePID},list) do
+  def handle_cast({:receivePID,numHop},list) do
     
   end
 
