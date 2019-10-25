@@ -66,16 +66,28 @@ defmodule TNode do
     neighborMap = Enum.at(list,4)
     a = greatCommonPrefix(mNid,surrogateNid)
     maxLevel = length(a)
-    list = ackMulticastInBuildTable(surrogatePid,a,mNid,mPid)
-    list = trim(list)       #find closest nodes not implement yet
-    neighborMapAtlvl = buildTableFromList(list,maxLevel)
-    neighborMap = List.replace_at(neighborMap,maxLevel-1,neighborAtLvl)
+    candidateList = ackMulticastInBuildTable(surrogatePid,a,mNid,mPid,self())
+    candidateList = trim(candidateList)       #find closest nodes not implement yet
+    neighborMapAtlvl = buildTableFromList(candidateList,maxLevel) 
+    neighborMap = List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
     #########
     temp = 
     Enum.map(maxLevel-1..0,fn x->
       list = getNextList()
       buildTableFromList(list,x)
     end)
+  end
+
+  def buildTableFromList(candidateList,maxLeve) do
+    
+  end
+
+  def trim(list) do
+    
+  end
+
+  def getNextList do
+    
   end
 
   def greatCommonPrefix(mNid,surrogateNid) do
@@ -105,7 +117,7 @@ defmodule TNode do
 
   end
 
-  def ackMulticastInBuildTable(surrogatePid,a,newNNid,newNPid) do
+  def ackMulticastInBuildTable(surrogatePid,a,newNNid,newNPid,fatherPid) do
     GenServer.cast(surrogatePid,{:ackMulticastIBT,a,newNNid,newNPid})
   end
 
@@ -114,11 +126,11 @@ defmodule TNode do
   end
 
   def getPrelimNeighborMap(surrogatePid) do
-    GenServer.call(__MODULE__, {:getPreNeiMap, surrogatePid})
+    GenServer.call(surrogatePid, :getPreNeiMap)
   end
 
   def acqPriSurrogate(initPid,srcNid,srcPid,lvl) do
-    GenServer.cast(initPid,{:acqPriSurrogate,srcNid,srcPid,lvl})
+    GenServer.cast(initPid,{:acqPriSur,srcNid,srcPid,lvl})
   end
 
   def buildNeighborMap(pid,nid,aid,lvl) do
@@ -144,7 +156,7 @@ defmodule TNode do
     neighbor = Enum.at(list,3)
     neighborMap = Enum.at(list,4)
     neighborAtLvl = Enum.at(neighborMap,lvl-1)
-    if Enum.find_value(neighborAtLvl,fn x -> x!="NULL"&&x!=mNid end) do
+    if Enum.find_value(neighborAtLvl,fn x -> x != "NULL"&& x !=mNid end) do
       Enum.map(0..15,fn x ->
         if Enum.at(neighborAtLvl,x)!="NULL" do
           TNode.ackMulticast(neighbor[Enum.at(neighborAtLvl,x)],Enum.slice(Enum.at(neighborAtLvl,x),0..lvl),newNPid,newNPid)
@@ -169,10 +181,10 @@ defmodule TNode do
     neighborMap = Enum.at(list,4)
     neighborAtLvl = Enum.at(neighborMap,lvl-1)
     numChild = 
-    if Enum.find_value(neighborAtLvl,fn x -> (x!="NULL")&&(x!=mNid) end) do
+    if Enum.find_value(neighborAtLvl,fn x -> (x != "NULL")&&(x != mNid) end) do
       Enum.map(0..15,fn x ->
         if Enum.at(neighborAtLvl,x)!="NULL" do
-          TNode.ackMulticast(neighbor[Enum.at(neighborAtLvl,x)],Enum.slice(Enum.at(neighborAtLvl,x),0..lvl),newNPid,newNPid,self()))
+          TNode.ackMulticastInBuildTable(neighbor[Enum.at(neighborAtLvl,x)],Enum.slice(Enum.at(neighborAtLvl,x),0..lvl),newNPid,newNPid,self())
         end
       end)
       length(List.delete(Enum.uniq(neighborAtLvl),"NULL"))
@@ -185,21 +197,7 @@ defmodule TNode do
     {:noreply,list}
   end
 
-  def functionS(n,listMap) when n==0 do
-		listMap
-	end
-	def functionS(n,listMap) do
-		receive do
-      {:ack,neiNid,neiPid}->
-        listMap = Map.put(listMap,neiNid,neiPid)
-        functionS(n-1,listMap)
-		after
-			3->
-				IO.inspect(n, label: "dead in ackMulticastIBT!")
-		end
-	end
-
-  def handle_cast({:acqPriSurrogate,srcNid,srcPid,lvl},list) do
+  def handle_cast({:acqPriSur,srcNid,srcPid,lvl},list) do
     mNid = List.first(list)
     neighborMap = Enum.at(list,4)   ######
     neighbor = Enum.at(list,3)
@@ -209,9 +207,10 @@ defmodule TNode do
     else
       send srcPid,{:surrogate,mNid,self()}
     end
+    {:noreply,list}
   end
 
-  def handle_cast({:routeToNode,pid,nid,lvl,srcPid,numHop},list) do
+  def handle_cast({:routeToNode,nid,lvl,srcPid,numHop},list) do
     mNid = List.first(list)
     numHop = numHop + 1
     if mNid == nid do
@@ -229,7 +228,7 @@ defmodule TNode do
     end
   end
 
-  def handle_cast({:routeToObj,pid,guid,lvl,srcPid},list) do
+  def handle_cast({:routeToObj,_pid,guid,lvl,srcPid},list) do
     objMap = Enum.at(list,2)
     if Map.has_key?(objMap,guid) do
       #send objMap[guid] to srcPid
@@ -259,10 +258,24 @@ defmodule TNode do
     {:noreply, List.replace_at(list,2,objMap)}
   end
 
-  def handle_call({:getPreNeiMap, surrogatePid}, _from, list) do
+  def handle_call(:getPreNeiMap, _from, list) do
     neighborMap = Enum.at(list,4)
     {:reply, neighborMap, list}
   end
+
+  def functionS(n,listMap) when n==0 do
+		listMap
+	end
+	def functionS(n,listMap) do
+		receive do
+      {:ack,neiNid,neiPid}->
+        listMap = Map.put(listMap,neiNid,neiPid)
+        functionS(n-1,listMap)
+		after
+			3->
+				IO.inspect(n, label: "dead in ackMulticastIBT!")
+		end
+	end
 
   def nextHop(mNid,lvl,matchID,neighborMap) do    #matchID 需要查找的目标ID
     if lvl>4 do
@@ -275,7 +288,7 @@ defmodule TNode do
         #list = Enum.map(0..14,fn x -> Enum.at(Enum.at(neighborMap,lvl-1),rem(x+d+1,16)) end)
         #hd(List.delete(Enum.uniq(list),"NULL"))
         allNeighbor = Enum.at(neighborMap,lvl-1)
-        e = Enum.min_by(allNeighbor,fn x -> abs(elem(Integer.parse(x,16),0)-elem(Integer.parse(matchID,16),0)) end)
+        Enum.min_by(allNeighbor,fn x -> abs(elem(Integer.parse(x,16),0)-elem(Integer.parse(matchID,16),0)) end)
       else
         e
       end
