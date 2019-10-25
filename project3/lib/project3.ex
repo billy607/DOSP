@@ -67,9 +67,8 @@ defmodule TNode do
     a = greatCommonPrefix(mNid,surrogateNid)
     maxLevel = length(a)
     candidateList = ackMulticastInBuildTable(surrogatePid,a,mNid,mPid,self())
-    candidateList = trim(candidateList)       #find closest nodes not implement yet
-    neighborMapAtlvl = buildTableFromList(candidateList,maxLevel) 
-    neighborMap = List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
+    neighborMap = buildTableFromList(candidateList,maxLevel,neighborMap) 
+    #neighborMap = List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
     #########
     temp = 
     Enum.map(maxLevel-1..0,fn x->
@@ -78,12 +77,9 @@ defmodule TNode do
     end)
   end
 
-  def buildTableFromList(candidateList,maxLeve) do
-    
-  end
-
-  def trim(list) do
-    
+  def buildTableFromList(candidateList,maxLevel,neighborMap) do
+	neighborAtLvl=Enum.at(neighborMap,maxLevel-1)
+	
   end
 
   def getNextList do
