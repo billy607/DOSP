@@ -67,7 +67,7 @@ defmodule TNode do
     a = greatCommonPrefix(mNid,surrogateNid)
     maxLevel = length(a)
     candidateList = ackMulticastInBuildTable(surrogatePid,a,mNid,mPid,self())
-    neighborMap = buildTableFromList(candidateList,maxLevel,neighborMap) 
+    neighborMap = buildTableFromList(candidateList,maxLevel,neighborMap,neighbor,mNid) 
     #neighborMap = List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
     #########
     temp = 
@@ -77,9 +77,33 @@ defmodule TNode do
     end)
   end
 
-  def buildTableFromList(candidateList,maxLevel,neighborMap) do
-	neighborAtLvl=Enum.at(neighborMap,maxLevel-1)
-	
+  def buildTableFromList(candidateList,maxLevel,neighborMap,neighbor,mNid) do
+	neighbormapAtLvl=Enum.at(neighborMap,maxLevel-1)
+	list=Map.keys(candidateList)
+	neighbormapAtLvl=Enum.map(1..15,fn(x)->
+		Enum.find(list,fn(y)->
+			digit=elem(Integer.parse(String.at(y,maxLevel-1),16),0)
+			if digit==x-1 do
+				y
+			else if Enum.at(neighborMapAtlvl,x-1)!=mNid do
+				mNid
+			end
+		end)
+	end)
+	neighborMap=List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
+	neighborAtLvl=Enum.at(neighbor,maxLevel-1)
+	list1=Enum.map(neighborMapAtlvl,fn(x)->
+		if is_nil(Map.pop(candidateList,x))==true do
+			pid=Map.pop(candidateList,x)
+			{x,pid}
+		else if is_nil(Map.pop(neighbor,x))==true do
+			pid=Map.pop(neighbor,x)
+			{x,pid}
+		end
+	end)
+	map=Map.new(List.flatten(list1))
+	neighbor=Map.merge(map,neighbor)
+	[neighborMap,neighbor]
   end
 
   def getNextList do
