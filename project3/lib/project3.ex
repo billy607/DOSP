@@ -9,54 +9,31 @@ defmodule TNode do
   #init:bool true:此node为初始node
 
   #neighborMap需初始化为"NULL:!!!!!!!!!!!!!!!!!!
-  def start_link(nid,guid,objectMap,neighbor,neighborMap,init) do
-    GenServer.start_link(__MODULE__,[nid,guid,objectMap,neighbor,neighborMap,init])
+  def start_link(nid,neighbor,neighborMap,init,allnode) do
+    GenServer.start_link(__MODULE__,[nid,neighbor,neighborMap,init,allnode])
   end
   
   def init(list) do
-    neighborMap = Enum.at(list,4)
-    mNid = hd(list)
-    d1 = elem(Integer.parse(String.at(mNid,0),16),0) - 1
-    d2 = elem(Integer.parse(String.at(mNid,1),16),0) - 1
-    d3 = elem(Integer.parse(String.at(mNid,2),16),0) - 1
-    d4 = elem(Integer.parse(String.at(mNid,3),16),0) - 1
-    temp = [d1,d2,d3,d4]
-    neighborMap = [Enum.map(0..3,fn x -> List.replace_at(Enum.at(neighborMap,x),Enum.at(temp,x),mNid) end)]  #将自己添加到neighbormap中
-
+    neighborMap = Enum.at(list,2)
+	mPid = self()
+    sha1 = :crypto.hash(:sha, Kernel.inspect(mPid)) |> Base.encode16
+    mNid = String.slice(sha1,0..3)
+    d1 = elem(Integer.parse(String.at(mNid,0),16),0)
+    d2 = elem(Integer.parse(String.at(mNid,1),16),0)
+    d3 = elem(Integer.parse(String.at(mNid,2),16),0)
+    d4 = elem(Integer.parse(String.at(mNid,3),16),0)
+    temp = [d1,d2,d3,d4]	
+    neighborMap = Enum.map(0..3,fn x -> List.replace_at(Enum.at(neighborMap,x),Enum.at(temp,x),mNid) end)  #将自己添加到neighbormap中
+	list=List.replace_at(list,2,neighborMap)
     if Enum.at(list,5) do
-      mPid = self()
       Process.register(mPid,:initPid)
-      sha1 = :crypto.hash(:sha, Kernel.inspect(mPid)) |> Base.encode16
-      mNid = String.slice(sha1,0..3)
       {:ok,List.replace_at(list,0,mNid)}
     else
-      mPid = self()
-      sha1 = :crypto.hash(:sha, Kernel.inspect(mPid)) |> Base.encode16
-      mNid = String.slice(sha1,0..3)
       list = List.replace_at(list,0,mNid)
 
       initPid = Process.whereis(:initPid)
-      list = insert(mNid,initPid,list)
       {:ok,list}
     end
-  end
-
-  def insert(mNid,initPid,list) do
-    mPid = self()
-    acqPriSurrogate(initPid,mNid,mPid,1)                    #handle cast
-    IO.puts("waiting surrogate node to give response...")
-    list = 
-    receive do
-      {:surrogate, surrogateNid,surrogatePid} -> 
-        IO.puts("get surrogate node doing insertion...")
-        a = greatCommonPrefix(mNid,surrogateNid)            #function
-        neighborMap = getPrelimNeighborMap(surrogatePid)    #handle call
-        list = List.replace_at(list,4,neighborMap)
-        ackMulticast(surrogatePid,a,mNid,mPid)    #handle cast
-        list = acqNeighborMap(surrogateNid,surrogatePid,list)
-        list
-        IO.puts("insertion finish")
-    end 
   end
 
   def acqNeighborMap(surrogateNid,surrogatePid,list) do
@@ -73,37 +50,12 @@ defmodule TNode do
     temp = 
     Enum.map(maxLevel-1..0,fn x->
       list = getNextList()
-      buildTableFromList(list,x)
+      #buildTableFromList(list,x)
     end)
   end
 
   def buildTableFromList(candidateList,maxLevel,neighborMap,neighbor,mNid) do
-	neighbormapAtLvl=Enum.at(neighborMap,maxLevel-1)
-	list=Map.keys(candidateList)
-	neighbormapAtLvl=Enum.map(1..15,fn(x)->
-		Enum.find(list,fn(y)->
-			digit=elem(Integer.parse(String.at(y,maxLevel-1),16),0)
-			if digit==x-1 do
-				y
-			else if Enum.at(neighborMapAtlvl,x-1)!=mNid do
-				mNid
-			end
-		end)
-	end)
-	neighborMap=List.replace_at(neighborMap,maxLevel-1,neighborMapAtlvl)
-	neighborAtLvl=Enum.at(neighbor,maxLevel-1)
-	list1=Enum.map(neighborMapAtlvl,fn(x)->
-		if is_nil(Map.pop(candidateList,x))==true do
-			pid=Map.pop(candidateList,x)
-			{x,pid}
-		else if is_nil(Map.pop(neighbor,x))==true do
-			pid=Map.pop(neighbor,x)
-			{x,pid}
-		end
-	end)
-	map=Map.new(List.flatten(list1))
-	neighbor=Map.merge(map,neighbor)
-	[neighborMap,neighbor]
+	
   end
 
   def getNextList do
@@ -137,6 +89,14 @@ defmodule TNode do
 
   end
 
+  def update(pid,list) do
+	GenServer.cast(pid,{:update,list})
+  end
+  
+  def insert(pid) do
+	GenServer.cast(pid,{:insert})
+  end
+
   def ackMulticastInBuildTable(surrogatePid,a,newNNid,newNPid,fatherPid) do
     GenServer.cast(surrogatePid,{:ackMulticastIBT,a,newNNid,newNPid})
   end
@@ -168,6 +128,87 @@ defmodule TNode do
   def publishObj(pid,guid,aid,lvl) do
     GenServer.cast(pid,{:publish,guid,aid,lvl})
   end
+  
+  def handle_cast({:update,allnodes},list) do
+	send :main, {:updatefinish}
+	{:noreply,List.replace_at(list,4,allnodes)}
+  end
+  
+  def handle_cast({:insert},list) do
+	mNid=Enum.at(list,0)
+	#IO.puts(mNid)
+	#neighbor=Enum.at(list,1)
+	#neighborMap=Enum.at(list,2)
+	allnodes=Enum.at(list,4)
+	allnodesnid=Map.keys(allnodes)
+	allnodespid=Map.values(allnodes)
+	neighborMap=[]
+	allnodesnid=allnodesnid--[mNid]
+	#IO.puts("hello")
+	candidateline1=Enum.map(1..16,fn(digit)->
+		node=Enum.find(allnodesnid,fn(node)-> elem(Integer.parse(String.at(node,0),16),0)==digit-1 end)
+		if is_nil(node)==false do
+			node
+		else 
+			"NULL"
+		end
+	end)
+	candidateline2=Enum.map(1..16,fn(digit)->
+		n=String.slice(mNid,0..0)
+		node=Enum.find(allnodesnid,fn(node)-> elem(Integer.parse(String.at(node,1),16),0)==digit-1&&String.slice(node,0..0)==n end)
+		if is_nil(node)==false do
+			node
+		else 
+			"NULL"
+		end
+	end)
+	candidateline3=Enum.map(1..16,fn(digit)->
+		n=String.slice(mNid,0..1)
+		node=Enum.find(allnodesnid,fn(node)-> elem(Integer.parse(String.at(node,2),16),0)==digit-1&&String.slice(node,0..1)==n end)
+		if is_nil(node)==false do
+			node
+		else 
+			"NULL"
+		end
+	end)
+	candidateline4=Enum.map(1..16,fn(digit)->
+		n=String.slice(mNid,0..2)
+		node=Enum.find(allnodesnid,fn(node)-> elem(Integer.parse(String.at(node,3),16),0)==digit-1&&String.slice(node,0..2)==n end)
+		if is_nil(node)==false do
+			node
+		else 
+			"NULL"
+		end
+	end)
+	neighborMap=[candidateline1,candidateline2,candidateline3,candidateline4]
+		
+	
+    d1 = elem(Integer.parse(String.at(mNid,0),16),0)
+    d2 = elem(Integer.parse(String.at(mNid,1),16),0)
+    d3 = elem(Integer.parse(String.at(mNid,2),16),0)
+    d4 = elem(Integer.parse(String.at(mNid,3),16),0)
+	temp = [d1,d2,d3,d4]
+	neighborMap = Enum.map(0..3,fn x -> List.replace_at(Enum.at(neighborMap,x),Enum.at(temp,x),mNid) end)
+	nei=List.flatten(Enum.map(1..4,fn(lvl)->
+		Enum.map(Enum.at(neighborMap,lvl-1),fn(x)->
+			pid=if x != "NULL" do
+				elem(Map.fetch(allnodes,x),1)
+			end
+			if is_nil(pid)==false do
+			{x,pid}
+			end
+		end)
+	end))
+	nei=List.delete(Enum.uniq(nei),nil)
+	neighbor=Map.new(nei)
+	list=List.replace_at(list,2,neighborMap)
+	list=List.replace_at(list,1,neighbor)
+	#IO.inspect(neighborMap,label: mNid)
+	#IO.inspect(mNid)
+	{:noreply,list}
+  end
+
+
 
   def handle_cast({:ackMulticast,a,newNNid,newNPid},list) do
     mNid = hd(list)
@@ -232,16 +273,19 @@ defmodule TNode do
 
   def handle_cast({:routeToNode,nid,lvl,srcPid,numHop},list) do
     mNid = List.first(list)
-    numHop = numHop + 1
     if mNid == nid do
       send :main, {:compareNumHop,numHop}
+	  {:noreply,list}
     else
-      neighborMap = Enum.at(list,4)
-      neighbor = Enum.at(list,3)
+	  numHop = numHop + 1
+      neighborMap = Enum.at(list,2)
+      neighbor = Enum.at(list,1)
       nextN = nextHop(mNid,lvl,nid,neighborMap)
       if nextN != mNid do
         TNode.routeToNode(neighbor[nextN],nid,lvl+1,srcPid,numHop)
       else
+		IO.inspect(neighborMap)
+		IO.inspect(nid, label: mNid)
         IO.puts("error0,cannot find such node")
       end
       {:noreply,list}
@@ -302,12 +346,13 @@ defmodule TNode do
       mNid
     else
       d = elem(Integer.parse(String.at(matchID,lvl-1),16),0)
-      e = Enum.at(Enum.at(neighborMap,lvl-1),d-1)
+      e = Enum.at(Enum.at(neighborMap,lvl-1),d)
       e = 
       if e == "NULL" do
         #list = Enum.map(0..14,fn x -> Enum.at(Enum.at(neighborMap,lvl-1),rem(x+d+1,16)) end)
         #hd(List.delete(Enum.uniq(list),"NULL"))
         allNeighbor = Enum.at(neighborMap,lvl-1)
+		allNeighbor=List.delete(Enum.uniq(allNeighbor),"NULL")
         Enum.min_by(allNeighbor,fn x -> abs(elem(Integer.parse(x,16),0)-elem(Integer.parse(matchID,16),0)) end)
       else
         e
