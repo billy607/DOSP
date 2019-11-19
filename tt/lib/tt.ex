@@ -3,8 +3,8 @@ defmodule Stack do
 
   # Client
 
-  def start_link(default) when is_list(default) do
-    GenServer.start_link(__MODULE__, default)
+  def start_link() do
+    GenServer.start_link(__MODULE__, [])
   end
 
   def push(pid, element) do
@@ -27,14 +27,8 @@ defmodule Stack do
   # Server (callbacks)
 
   @impl true
-  def init(stack) do
-    {:ok, pid} = GenServer.start_link(Sender, [:hello])
-    receive do
-      {:finish} -> true
-      IO.puts("im waiting")
-        {:ok, stack}
-    end
-    IO.puts("im out")
+  def init(list) do
+    {:ok,list}
   end
 
   @impl true
