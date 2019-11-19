@@ -2,7 +2,7 @@ defmodule Engine do
   use GenServer
   #user:[user_id,user_pwd,user_ip,connect]
   #subscribe:[user_id,user_id2]
-  #tweet:[tweet_id,publisher,content]
+  #tweet:[tweet_id,publisher_id,content]
   #mention:[tweet_id,user_id(mentions)]
   #hashTags:[hashtag,tweet_id]
   def start_link() do
@@ -34,7 +34,7 @@ defmodule Engine do
     Genserver.call(pid,{:login, uid,pwd,ip})
   end
 
-  def handle_cast({:register, uid,pwd,ip,connect}, state) do
+  def handle_cast({:register, uid,pwd,ip,connect}, state) do  #待完善：查找重名
     :ets.insert(:user, {uid,pwd,ip,connect})
     {:noreply, state}
   end
@@ -56,6 +56,8 @@ defmodule Engine do
 
     :ets.insert(:user, {uid,pwd,ip,1})
     #deliver subscribed users' tweets and tweets mentiond
+	subscribed_users=List.flatten(:ets.match(:subscribe,{uid,"$1"}))
+	tweet_list=Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$2",x,:"$1"})))) end)
 
     {:reply, [true,[]], state}
   end
