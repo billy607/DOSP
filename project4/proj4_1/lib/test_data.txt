@@ -1,0 +1,10 @@
+user
+:ets.insert(:user,{"A","a",123,0})
+:ets.insert(:user,{"B","a",234,0})
+:ets.insert(:user,{"C","a",345,0})
+subscribe:
+:ets.insert(:subscribe,{"A","B"})
+:ets.insert(:subscribe,{"A","C"})
+tweet:
+:ets.insert(:tweet,{1,"B","abc"})
+:ets.insert(:tweet,{2,"C","def"})
