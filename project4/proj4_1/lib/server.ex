@@ -122,75 +122,81 @@ defmodule Engine do
     {:noreply, List.replace_at(state,1,tweet_id+1)}
   end
 
-  def handle_cast({:demo}, state ) do
+  def handle_cast({:demo}, _state ) do
     :ets.insert(:user,{"A","a",123,0})
     :ets.insert(:user,{"B","a",234,0})
     :ets.insert(:user,{"C","a",345,0})
     :ets.insert(:user,{"D","a",666,0})
     :ets.insert(:subscribe,{"A","B"})
     :ets.insert(:subscribe,{"A","C"})
-    :ets.insert(:tweet,{1,"B","abc",nil})
-    :ets.insert(:tweet,{2,"C","def",nil})
-    :ets.insert(:tweet,{3,"D","lzq",nil})
-    :ets.insert(:mention,{3,"A"})
+    :ets.insert(:tweet,{0,"B","abc",nil})
+    :ets.insert(:tweet,{1,"C","def",nil})
+    :ets.insert(:tweet,{2,"D","lzq",nil})
+    :ets.insert(:tweet,{3,"D","lzq22",nil})
+    :ets.insert(:mention,{2,"A"})
+    :ets.insert(:hashTags,{"lzq",0})
     :ets.insert(:hashTags,{"lzq",1})
-    :ets.insert(:hashTags,{"lzq",2})
-    :ets.insert(:hashTags,{"kkkkk",3})
-    {:noreply, state}
+    :ets.insert(:hashTags,{"kkkkk",2})
+    {:noreply, [4,4]}
   end
 
   def handle_call({:register, uid,pwd,ip,connect},_from, state) do 
-    flag =
     if !Enum.empty?(:ets.lookup(:user,uid)) do
-      false
+      {:reply,false,state}
     else
       :ets.insert(:user, {uid,pwd,ip,connect})
-      true
+      {:reply,true,List.replace_at(state,0,hd(state)+1)}
     end
-      {:reply,flag,List.replace_at(state,0,hd(state)+1)}
   end
 
   def handle_call({:login, uid,pwdIn,ip},_from, state) do
     user = :ets.lookup(:user,uid)
-    if Enum.empty?(user) do
-      {:reply, [false,"User name invalid"], state}
-    end
-    pwd = Enum.at(Tuple.to_list(List.first(user)),1)
-    if(pwd != pwdIn) do
-      {:reply, [false,"Wrong password"], state}
+    flag = if(Enum.empty?(user), do: false, else: true)
+    [flag,pwd] = 
+    if flag do
+      pwd = Enum.at(Tuple.to_list(List.first(user)),1)
+      if pwd == pwdIn ,do: [true,pwd], else: [false,nil]
+    else
+      [false,nil]
     end
 
-    :ets.insert(:user, {uid,pwd,ip,1})
-    #deliver subscribed users' tweets and tweets mentiond
-	  subscribed_users=List.flatten(:ets.match(:subscribe,{uid,:"$1"}))
-    tweet_list=Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})))) end)
-    mention_tweets_id = List.flatten(:ets.match(:mention,{:"$1",uid}))
-    tweet_list = tweet_list ++ Enum.map(mention_tweets_id, fn(x) ->
-      List.flatten(Tuple.to_list(List.first(:ets.lookup(:tweet,x))))
-    end)
-    {:reply, [true,Enum.uniq(tweet_list)], state}
+    if flag do
+      :ets.insert(:user, {uid,pwd,ip,1})
+      #deliver subscribed users' tweets and tweets mentiond
+      subscribed_users = List.flatten(:ets.match(:subscribe,{uid,:"$1"}))
+      tweet_list = Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})))) end)
+      mention_tweets_id = List.flatten(:ets.match(:mention,{:"$1",uid}))
+      tweet_list = tweet_list ++ Enum.map(mention_tweets_id, fn(x) ->
+        List.flatten(Tuple.to_list(List.first(:ets.lookup(:tweet,x))))
+      end)
+      {:reply, [flag,Enum.uniq(tweet_list)], state}
+    else
+      {:reply, [flag,"invalid username or password!"], state}
+    end
   end
 
   def handle_call({:logout, uid,pwdIn},_from, state) do
     user = :ets.lookup(:user,uid)
-    if Enum.empty?(user) do
-      {:reply, false, state}
-    end
+    flag = if(Enum.empty?(user), do: false, else: true)
     pwd = Enum.at(Tuple.to_list(List.first(user)),1)
-    if(pwd != pwdIn) do
+    flag = if((pwd != pwdIn)&&flag, do: false, else: true)
+
+    if flag do
+      :ets.insert(:user, {uid,pwd,Enum.at(Tuple.to_list(List.first(user)),2),0})
+      {:reply, true, state}
+    else
       {:reply, false, state}
     end
-
-    :ets.insert(:user, {uid,pwd,Enum.at(Tuple.to_list(List.first(user)),2),0})
-    {:reply, true, state}
+    
   end
 
   def handle_call({:delete,uid,pwdIn},_from,state) do
     if Enum.empty?(:ets.match_object(:user,{uid,pwdIn,:"$1",:"$2"})) do
       {:reply,false,state}
+    else
+      :ets.delete(:user,uid)
+      {:reply,true,List.replace_at(state,0,hd(state)-1)}
     end
-    :ets.delete(:user,uid)
-    {:reply,true,List.replace_at(state,0,hd(state)-1)}
   end
 
   def handle_call({:query,type,content},_from,state) do

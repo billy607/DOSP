@@ -65,6 +65,9 @@ defmodule Client do
         tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
         mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
 
+        IO.inspect(hashTags,label: "hashtag, client")
+        IO.inspect(mentions,label: "mention, client")
+
         Engine.send_tweet(serverIP,uid,pwd,mentions,hashTags)
     end
   
@@ -89,19 +92,19 @@ defmodule Client do
 
     def handle_cast({:delete},state) do
         serverIP = hd(state)
-        uid = Enum.at(:sys.get_state(self()),1)
-        pwd = Enum.at(:sys.get_state(self()),2)
+        uid = Enum.at(state,1)
+        pwd = Enum.at(state,2)
         if Engine.delete(serverIP,uid,pwd) do
             IO.puts("delete success")
         else
             IO.puts("delete failed")
         end
-        {:noreply,state}
+        {:noreply,[hd(state)]}
     end
 
     def handle_cast({:subscribe,follow},state) do
         serverIP = hd(state)
-        uid = Enum.at(:sys.get_state(self()),1)
+        uid = Enum.at(state,1)
         Engine.subscribe(serverIP,uid,follow)
         {:noreply,state}
     end
@@ -112,14 +115,15 @@ defmodule Client do
         IO.inspect(res)
         if hd(res) do
             {:noreply,state++[uid,pwd]}
+        else
+            {:noreply,state}
         end
-        {:noreply,state}
     end
 
     def handle_cast({:logout},state) do
-        serverIP = hd(:sys.get_state(self()))
-        uid = Enum.at(:sys.get_state(self()),1)
-        pwd = Enum.at(:sys.get_state(self()),2)
+        serverIP = hd(state)
+        uid = Enum.at(state,1)
+        pwd = Enum.at(state,2)
         if Engine.logout(serverIP,uid,pwd) do
             IO.puts("logout success")
         else
@@ -130,17 +134,22 @@ defmodule Client do
 
     def handle_cast({:send_tweet,content},state) do
         #uid,content,mention,hashtag
-        serverIP = hd(:sys.get_state(self()))
-        uid = Enum.at(:sys.get_state(self()),1)
-        pwd = Enum.at(:sys.get_state(self()),2)
+        serverIP = hd(state)
+        uid = Enum.at(state,1)
+
+        IO.inspect(content, label: "content")
 
         tmp = List.flatten(Regex.scan(~r/#.*?\s/, content))
+        IO.inspect(tmp,label: "tmp")
         hashTags = Enum.map(tmp, fn(x) -> Regex.replace(~r/#|\s/,x,"") end)
 
         tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
         mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
 
-        Engine.send_tweet(serverIP,uid,pwd,mentions,hashTags)
+        IO.inspect(hashTags,label: "hashtag, client")
+        IO.inspect(mentions,label: "mention, client")
+
+        Engine.send_tweet(serverIP,uid,content,mentions,hashTags)
         {:noreply,state}
     end
   end

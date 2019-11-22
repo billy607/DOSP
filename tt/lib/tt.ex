@@ -15,6 +15,10 @@ defmodule Stack do
     GenServer.call(pid, :pop)
   end
 
+  def test(pid,flag) do
+    GenServer.call(pid, {:callT,flag})
+  end
+
   def hello(pid,text) do
     Stack.echo(self())
     GenServer.cast(pid, {:hi,text})
@@ -34,6 +38,14 @@ defmodule Stack do
   @impl true
   def handle_call(:pop, _from, [head | tail]) do
     {:reply, head, tail}
+  end
+
+  def handle_call({:callT, flag} , _from, state) do
+    res = 
+    if flag do
+      2
+    end
+    {:reply,res,state}
   end
 
   @impl true

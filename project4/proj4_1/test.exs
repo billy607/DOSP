@@ -1,0 +1,10 @@
+{:ok,pidE} = Engine.start_link()
+{:ok,pidC} = Client.start_link(pidE)
+Engine.demo(pidE)
+:timer.sleep(10)
+#O.inspect(:ets.tab2list(:tweet))
+GenServer.cast(pidC,{:login,"A","a"})
+GenServer.cast(pidC,{:send_tweet,"im happy today #everyday%k #kdj @B @C "})
+
+:timer.sleep(100)
+IO.inspect(:ets.tab2list(:tweet))
