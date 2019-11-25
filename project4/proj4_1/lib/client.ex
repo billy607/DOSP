@@ -6,86 +6,53 @@ defmodule Client do
     end
   
     def init(list) do
-      {:ok,list}#list = serverIP address
+      {:ok,list++["","",[],[],[],[]]}
+      #list = [serverIP address,uid,pwd,send_tweet,subscribe_tweet,mentionme_tweet,queryRES]
     end
-  
-    def register(uid,pwd) do
-        ip = self()
-        serverIP = hd(:sys.get_state(ip))
-        if Engine.register(serverIP,uid,pwd,ip,0) do
-            IO.puts("register success")
-        else
-            IO.puts("register failed")
-        end
-    end
-  
-    def delete(uid,pwd) do
-        serverIP = hd(:sys.get_state(self()))
-        if Engine.delete(serverIP,uid,pwd) do
-            IO.puts("delete success")
-        else
-            IO.puts("delete failed")
-        end
-    end
-  
-    def subscribe(uid,follow) do
-        serverIP = hd(:sys.get_state(self()))
-        Engine.subscribe(serverIP,uid,follow)
-    end
-  
-    def login(uid,pwd) do
-        serverIP = hd(:sys.get_state(self()))
-        res = Engine.login(serverIP,uid,pwd,self())
-        IO.inspect(res)
-        if hd(res) do
-            :sys.replace_state self(), fn state -> [state] ++ [uid,pwd] end
-        end
-    end
-  
-    def logout() do
-        serverIP = hd(:sys.get_state(self()))
-        uid = Enum.at(:sys.get_state(self()),1)
-        pwd = Enum.at(:sys.get_state(self()),2)
-        if Engine.logout(serverIP,uid,pwd) do
-            IO.puts("logout success")
-        else
-            IO.puts("logout failed")
-        end
-    end
-  
-    def send_tweet(content) do
-        #uid,content,mention,hashtag
-        serverIP = hd(:sys.get_state(self()))
-        uid = Enum.at(:sys.get_state(self()),1)
-        pwd = Enum.at(:sys.get_state(self()),2)
 
-        tmp = List.flatten(Regex.scan(~r/#.*?\s/, content))
-        hashTags = Enum.map(tmp, fn(x) -> Regex.replace(~r/#|\s/,x,"") end)
-
-        tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
-        mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
-
-        IO.inspect(hashTags,label: "hashtag, client")
-        IO.inspect(mentions,label: "mention, client")
-
-        Engine.send_tweet(serverIP,uid,pwd,mentions,hashTags)
+    def register(pid,uid,pwd) do
+        GenServer.cast(pid,{:register,uid,pwd})
     end
-  
+
+    def delete(pid) do
+        GenServer.cast(pid,{:delete})
+    end
+
+    def subscribe(pid,follow) do
+        GenServer.cast(pid,{:subscribe,follow})
+    end
+
+    def login(pid,uid,pwd) do
+        GenServer.cast(pid,{:login,uid,pwd})
+    end
+
+    def logout(pid) do
+        GenServer.cast(pid,{:logout})
+    end
+
+    def send_tweet(pid,content) do
+        GenServer.cast(pid,{:send_tweet,content})
+    end
+
+    def re_tweet(pid,content,retweet_id) do
+        GenServer.cast(pid,{:re_tweet,content,retweet_id})
+    end
+
+    def receive_tweet(pid,content,type) do
+        GenServer.cast(pid,{:receive,content,type})
+    end
+
     def query(pid,type,content) do
-      GenServer.call(pid,{:query,type,content})
-    end
-  
-    def retweet(pid,uid,content,mention,hashTags,retweetId) do
-      GenServer.cast(pid,{:re_tweet, uid,content,mention,hashTags,retweetId})
+        GenServer.cast(pid,{:query,type,content})
     end
 
     def handle_cast({:register,uid,pwd},state) do
         ip = self()
         serverIP = hd(state)
         if Engine.register(serverIP,uid,pwd,ip,0) do
-            IO.puts("register success")
+            IO.inspect([self(),"register success"])
         else
-            IO.puts("register failed")
+            IO.inspect([self(),"register failed"])
         end
         {:noreply,state}
     end
@@ -95,9 +62,9 @@ defmodule Client do
         uid = Enum.at(state,1)
         pwd = Enum.at(state,2)
         if Engine.delete(serverIP,uid,pwd) do
-            IO.puts("delete success")
+            IO.inspect([self(),"delete success"])
         else
-            IO.puts("delete failed")
+            IO.inspect([self(),"delete success"])
         end
         {:noreply,[hd(state)]}
     end
@@ -112,9 +79,9 @@ defmodule Client do
     def handle_cast({:login,uid,pwd},state) do
         serverIP = hd(state)
         res = Engine.login(serverIP,uid,pwd,self())
-        IO.inspect(res)
+        IO.inspect([self(),res], label: "login status")
         if hd(res) do
-            {:noreply,state++[uid,pwd]}
+            {:noreply,List.replace_at(List.replace_at(state,1,uid),2,pwd)}
         else
             {:noreply,state}
         end
@@ -137,20 +104,54 @@ defmodule Client do
         serverIP = hd(state)
         uid = Enum.at(state,1)
 
-        IO.inspect(content, label: "content")
-
+        #IO.inspect(content, label: "content")
         tmp = List.flatten(Regex.scan(~r/#.*?\s/, content))
-        IO.inspect(tmp,label: "tmp")
+        #IO.inspect(tmp,label: "tmp")
         hashTags = Enum.map(tmp, fn(x) -> Regex.replace(~r/#|\s/,x,"") end)
 
         tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
         mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
 
-        IO.inspect(hashTags,label: "hashtag, client")
-        IO.inspect(mentions,label: "mention, client")
-
         Engine.send_tweet(serverIP,uid,content,mentions,hashTags)
+
         {:noreply,state}
+    end
+
+    def handle_cast({:re_tweet,content,retweet_id},state) do
+        serverIP = hd(state)
+        uid = Enum.at(state,1)
+
+        tmp = List.flatten(Regex.scan(~r/#.*?\s/, content))
+        hashTags = Enum.map(tmp, fn(x) -> Regex.replace(~r/#|\s/,x,"") end)
+
+        tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
+        mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
+
+        Engine.retweet(serverIP,uid,content,mentions,hashTags,retweet_id)
+
+        {:noreply,state}
+    end
+
+    def handle_cast({:receive,tweet,type},state) do
+        case type do
+            0 -> #subscribe
+                {:noreply,List.replace_at(state,4,Enum.at(state,4) ++ [tweet])}
+            1 -> #mention me
+                {:noreply,List.replace_at(state,5,Enum.at(state,5) ++ [tweet])}
+            _ ->
+                IO.puts("error")
+        end
+    end
+
+    def handle_cast({:query,type,content},state) do
+        serverIP = hd(state)
+        queryRES = Engine.query(serverIP,type,content)
+        if Enum.at(queryRES,0) do
+            {:noreply,List.replace_at(state,6,Enum.at(state,5) ++ Enum.at(queryRES,1))}
+        else
+            IO.inspect([self(),"no result for query"],label: "query")
+            {:noreply,state}
+        end
     end
   end
   

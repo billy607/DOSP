@@ -75,10 +75,10 @@ defmodule Engine do
     Enum.each(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
       mention_user=:ets.lookup(:user,x)
-      IO.inspect(mention_user)
+      IO.inspect(mention_user,label: "mention users (in retweet)")
       if Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
-        IO.inspect(Enum.at(Tuple.to_list(List.first(mention_user)),2),label: "mention userip")
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,retweetId],1)
       end
     end)
     #subscribe
@@ -87,7 +87,7 @@ defmodule Engine do
       follower=:ets.lookup(:user,x)
       if Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
-        IO.inspect(Enum.at(Tuple.to_list(List.first(follower)),2),label: "followerip")
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,retweetId],0)
       end
     end)
     {:noreply, List.replace_at(state,1,tweet_id+1)}
@@ -104,10 +104,10 @@ defmodule Engine do
     Enum.each(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
       mention_user=:ets.lookup(:user,x)
-      IO.inspect(mention_user)
+      IO.inspect(mention_user,label: "mention users (in send tweet)")
       if Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
-        IO.inspect(Enum.at(Tuple.to_list(List.first(mention_user)),2),label: "mention userip")
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
       end
     end)
     #subscribe
@@ -116,7 +116,7 @@ defmodule Engine do
       follower=:ets.lookup(:user,x)
       if Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
-        IO.inspect(Enum.at(Tuple.to_list(List.first(follower)),2),label: "followerip")
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
       end
     end)
     {:noreply, List.replace_at(state,1,tweet_id+1)}
