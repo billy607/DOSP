@@ -92,11 +92,12 @@ defmodule Client do
         uid = Enum.at(state,1)
         pwd = Enum.at(state,2)
         if Engine.logout(serverIP,uid,pwd) do
-            IO.puts("logout success")
+            IO.inspect([self(),"logout success"])
+            {:noreply,[hd(state),"","",[],[],[],[]]}
         else
-            IO.puts("logout failed")
+            IO.inspect([self(),"logout failed"])
+            {:noreply,state}
         end
-        {:noreply,state}
     end
 
     def handle_cast({:send_tweet,content},state) do
