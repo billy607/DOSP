@@ -75,19 +75,19 @@ defmodule Engine do
     Enum.each(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
       mention_user=:ets.lookup(:user,x)
-      IO.inspect(mention_user,label: "mention users (in retweet)")
-      if Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
+      #IO.inspect(mention_user,label: "mention users (in send tweet)")
+      if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,retweetId],1)
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
       end
     end)
     #subscribe
     followers=List.flatten(:ets.match(:subscribe,{:"$1",uid}))
     Enum.each(followers,fn(x)->
       follower=:ets.lookup(:user,x)
-      if Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
+      if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,retweetId],0)
+        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
       end
     end)
     {:noreply, List.replace_at(state,1,tweet_id+1)}
@@ -104,8 +104,8 @@ defmodule Engine do
     Enum.each(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
       mention_user=:ets.lookup(:user,x)
-      IO.inspect(mention_user,label: "mention users (in send tweet)")
-      if Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
+      #IO.inspect(mention_user,label: "mention users (in send tweet)")
+      if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
         Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
       end
@@ -114,7 +114,7 @@ defmodule Engine do
     followers=List.flatten(:ets.match(:subscribe,{:"$1",uid}))
     Enum.each(followers,fn(x)->
       follower=:ets.lookup(:user,x)
-      if Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
+      if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
         Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
       end
@@ -164,12 +164,12 @@ defmodule Engine do
       :ets.insert(:user, {uid,pwd,ip,1})
       #deliver subscribed users' tweets and tweets mentiond
       subscribed_users = List.flatten(:ets.match(:subscribe,{uid,:"$1"}))
-      tweet_list = Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})))) end)
+      tweet_list_subscribe = Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})))) end)
       mention_tweets_id = List.flatten(:ets.match(:mention,{:"$1",uid}))
-      tweet_list = tweet_list ++ Enum.map(mention_tweets_id, fn(x) ->
+      tweet_list_mention = Enum.map(mention_tweets_id, fn(x) ->
         List.flatten(Tuple.to_list(List.first(:ets.lookup(:tweet,x))))
       end)
-      {:reply, [flag,Enum.uniq(tweet_list)], state}
+      {:reply, [flag,tweet_list_subscribe,tweet_list_mention], state}
     else
       {:reply, [flag,"invalid username or password!"], state}
     end

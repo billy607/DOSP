@@ -7,7 +7,7 @@ defmodule Client do
   
     def init(list) do
       {:ok,list++["","",[],[],[],[]]}
-      #list = [serverIP address,uid,pwd,send_tweet,subscribe_tweet,mentionme_tweet,queryRES]
+      #list = [serverIP,uid,pwd,send_tweet,subscribe_tweet,mentionme_tweet,queryRES]
     end
 
     def register(pid,uid,pwd) do
@@ -50,9 +50,9 @@ defmodule Client do
         ip = self()
         serverIP = hd(state)
         if Engine.register(serverIP,uid,pwd,ip,0) do
-            IO.inspect([self(),"register success"])
+            #IO.inspect([self(),"register success"])
         else
-            IO.inspect([self(),"register failed"])
+            #IO.inspect([self(),"register failed"])
         end
         {:noreply,state}
     end
@@ -62,9 +62,9 @@ defmodule Client do
         uid = Enum.at(state,1)
         pwd = Enum.at(state,2)
         if Engine.delete(serverIP,uid,pwd) do
-            IO.inspect([self(),"delete success"])
+            #IO.inspect([self(),"delete success"])
         else
-            IO.inspect([self(),"delete success"])
+            #IO.inspect([self(),"delete success"])
         end
         {:noreply,[hd(state)]}
     end
@@ -79,9 +79,12 @@ defmodule Client do
     def handle_cast({:login,uid,pwd},state) do
         serverIP = hd(state)
         res = Engine.login(serverIP,uid,pwd,self())
-        IO.inspect([self(),res], label: "login status")
+        #IO.inspect([self(),res], label: "login status")
+		state = List.replace_at(List.replace_at(state,1,uid),2,pwd)
+		state = List.replace_at(state,4,Enum.at(state,4)++Enum.at(res,1))
+		state = List.replace_at(state,5,Enum.at(state,5)++Enum.at(res,2))
         if hd(res) do
-            {:noreply,List.replace_at(List.replace_at(state,1,uid),2,pwd)}
+            {:noreply,state}
         else
             {:noreply,state}
         end
@@ -92,10 +95,10 @@ defmodule Client do
         uid = Enum.at(state,1)
         pwd = Enum.at(state,2)
         if Engine.logout(serverIP,uid,pwd) do
-            IO.inspect([self(),"logout success"])
+            #IO.inspect([self(),"logout success"])
             {:noreply,[hd(state),"","",[],[],[],[]]}
         else
-            IO.inspect([self(),"logout failed"])
+            #IO.inspect([self(),"logout failed"])
             {:noreply,state}
         end
     end
@@ -148,9 +151,9 @@ defmodule Client do
         serverIP = hd(state)
         queryRES = Engine.query(serverIP,type,content)
         if Enum.at(queryRES,0) do
-            {:noreply,List.replace_at(state,6,Enum.at(state,5) ++ Enum.at(queryRES,1))}
+            {:noreply,List.replace_at(state,6,Enum.at(queryRES,1))}
         else
-            IO.inspect([self(),"no result for query"],label: "query")
+            #IO.inspect([self(),"no result for query"],label: "query")
             {:noreply,state}
         end
     end

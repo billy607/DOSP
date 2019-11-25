@@ -1,4 +1,6 @@
-{:ok,pidE} = Engine.start_link()
+defmodule Proj41 do
+	def main(num_user,num_msg) do
+		{:ok,pidE} = Engine.start_link()
 {:ok,pidC0} = Client.start_link(pidE)
 {:ok,pidC1} = Client.start_link(pidE)
 {:ok,pidC2} = Client.start_link(pidE)
@@ -44,32 +46,5 @@ Client.logout(pidC2)
 Client.logout(pidC3)
 Client.logout(pidC4)
 
-
-
-
-
-
-{:ok, spid} = GenServer.start_link(Engine,[:hello])
-		clientpids=[]
-		clientpids=clientpids++Enum.map(Enum.to_list(0..num_user-1),fn(_x)->
-			{:ok, cpid} = GenServer.start_link(Client,[spid])
-			cpid
-		end)
-		IO.inspect(clientpids)
-		Enum.each(clientpids, fn(clientpid)->
-			Client.register(clientpid,clientpid,"password")
-		end)
-		Enum.each(clientpids, fn(clientpid)->
-			Client.login(clientpid,clientpid,"password")
-		end)
-		Enum.each(clientpids, fn(clientpid)->
-			clientsubs=clientpids--[clientpid]
-			clientsub=Enum.random(clientsubs)
-			Client.subscribe(clientsub,clientpid)
-		end)
-		Enum.each(Enum.to_list(1..num_msg),fn(num)->
-			Enum.map(clientpids,fn(clientpid)->
-				IO.inspect(Kernel.inspect(clientpid) <> " " <> Kernel.inspect(num))
-				#Client.send_tweet(clientpid,"")
-			end)		
-		end)
+	end
+end
