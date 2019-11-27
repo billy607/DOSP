@@ -2,7 +2,7 @@ defmodule Proj41Test do
   use ExUnit.Case
 
   test "register" do
-	IO.puts("test register")
+	IO.puts("register test")
     {:ok,pidE} = Engine.start_link()
 	IO.inspect(:ets.tab2list(:user),label: "user table(before register)")
 	{:ok,pidC0} = Client.start_link(pidE)
