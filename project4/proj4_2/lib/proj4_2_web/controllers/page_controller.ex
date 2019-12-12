@@ -17,4 +17,8 @@ defmodule Proj42Web.PageController do
   def main(conn, _params) do
     render(conn,"main.html")
   end
+
+  def delete(conn, _params) do
+    render(conn,"delete.html")
+  end
 end

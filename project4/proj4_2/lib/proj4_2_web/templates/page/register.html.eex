@@ -6,12 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Today's Date</title>
+    <h1>
+        <small>register</small>
+    </h1>
 </head>
 
 <body>
-    <div>
-        <label><b>register</b></label>
-    </div>
     <div class="input-group">
         <label><b>username</b></label>
         <br>

@@ -21,6 +21,7 @@ defmodule Proj42Web.Router do
     get "/register", PageController, :register
     get "/login", PageController, :login
     get "/main", PageController, :main
+    get "/delete", PageController, :delete
   end
 
   # Other scopes may use custom stacks.

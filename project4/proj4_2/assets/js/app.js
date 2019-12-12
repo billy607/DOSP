@@ -18,15 +18,23 @@ import "phoenix_html"
 import socket from "./socket"
 import Register from "./register"
 import Login from "./login"
+import Main from "./main"
+import Delete from "./delete"
 
 var active_page = window.location.href;
-    active_page = active_page.substr(active_page.lastIndexOf('/')+1);
+    active_page = active_page.substring(active_page.lastIndexOf('/')+1,active_page.lastIndexOf('/')+5);
     switch (active_page) {
-      case "register":
+      case "regi":
         Register.init(socket)
         break;
-      case "login":
+      case "logi":
         Login.init(socket)
+        break;
+      case "main":
+        Main.init(socket)
+        break;
+      case "dele":
+        Delete.init(socket)
         break;
       default:
           break;

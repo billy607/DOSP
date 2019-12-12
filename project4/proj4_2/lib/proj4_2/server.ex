@@ -46,8 +46,8 @@ defmodule Engine do
     GenServer.call(pid,{:logout, uid,pwd})
   end
 
-  def send_tweet(pid,uid,content,mention,hashTags) do
-    GenServer.cast(pid,{:send_tweet, uid,content,mention,hashTags})
+  def send_tweet(pid,uid,content,mention,hashTags,socket) do
+    GenServer.cast(pid,{:send_tweet, uid,content,mention,hashTags,socket})
   end
 
   def query(pid,type,content) do
@@ -93,7 +93,7 @@ defmodule Engine do
     {:noreply, List.replace_at(state,1,tweet_id+1)}
   end
 
-  def handle_cast({:send_tweet, uid,content,mention,hashTags},state) do
+  def handle_cast({:send_tweet, uid,content,mention,hashTags,socket},state) do
     tweet_id=List.last(state)
     :ets.insert(:tweet,{tweet_id,uid,content,nil})
     #hashtag
@@ -107,7 +107,7 @@ defmodule Engine do
       #IO.inspect(mention_user,label: "mention users (in send tweet)")
       if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
+        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
       end
     end)
     #subscribe

@@ -16,7 +16,7 @@ let Login = {
             .receive("ok",function (reply)
             {
               if(reply.flag[0]){
-                  window.location.href='main'
+                  window.location.href='main?'+encodeURI(username)+'&'+encodeURI(password)
               }else{
                   alert("login faild")
               }

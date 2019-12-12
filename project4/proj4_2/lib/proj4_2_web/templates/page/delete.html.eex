@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Today's Date</title>
+</head>
+
+<body>
+    <div>
+        <label><b>Delete</b></label>
+    </div>
+    <div class="input-group">
+        <label><b>password</b></label>
+        <br>
+        <input type="password" id="deletePassword">
+    </div>
+    <button type="button" id="delete" class="btn-submit" >
+    delete</button>
+    <button type="button" id="go_login" class="btn-submit" 
+    onclick="javascript:window.location.href='/register'">
+    cancel</button>
+    
+</body>
+
+</html>
