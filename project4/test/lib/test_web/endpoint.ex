@@ -1,20 +1,17 @@
-defmodule Proj42Web.Endpoint do
-  use Phoenix.Endpoint, otp_app: :proj4_2
+defmodule TestWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :test
 
-  socket "/socket", Proj42Web.UserSocket,
+  socket "/socket", TestWeb.UserSocket,
     websocket: true,
     longpoll: false
-  socket "/serverSocket", Proj42Web.ServerSocket,
-    websocket: true,
-    longpoll: false
-    
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
-    from: :proj4_2,
+    from: :test,
     gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 
@@ -42,8 +39,8 @@ defmodule Proj42Web.Endpoint do
   # Set :encryption_salt if you would also like to encrypt it.
   plug Plug.Session,
     store: :cookie,
-    key: "_proj4_2_key",
-    signing_salt: "aNO2DWQM"
+    key: "_test_key",
+    signing_salt: "Tl4UuWmB"
 
-  plug Proj42Web.Router
+  plug TestWeb.Router
 end

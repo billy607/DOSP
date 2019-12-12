@@ -14,20 +14,4 @@ import "phoenix_html"
 // Import local files
 //
 // Local files can be imported directly using relative paths, for example:
-//import socket from "./socket"
-import socket from "./socket"
-import Register from "./register"
-import Login from "./login"
-
-var active_page = window.location.href;
-    active_page = active_page.substr(active_page.lastIndexOf('/')+1);
-    switch (active_page) {
-      case "register":
-        Register.init(socket)
-        break;
-      case "login":
-        Login.init(socket)
-        break;
-      default:
-          break;
-    };
+// import socket from "./socket"

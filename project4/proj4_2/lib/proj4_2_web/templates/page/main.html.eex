@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Today's Date</title>
+</head>
+
+<body>
+    <div>
+        <label><b>Hello!!!!</b></label>
+    </div>
+    <div class="input-group">
+        <label><b>username</b></label>
+        <br>
+        <input type="text" id="loginUsername">
+        <br>
+        <label><b>password</b></label>
+        <br>
+        <input type="password" id="loginPassword">
+    </div>
+    <button type="button" id="login" class="btn-submit" >
+    login</button>
+    <button type="button" id="go_register" class="btn-submit" 
+    onclick="javascript:window.location.href='/register'">
+    register</button>
+    
+</body>
+
+</html>

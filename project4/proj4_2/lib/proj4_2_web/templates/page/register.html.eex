@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Today's Date</title>
+</head>
+
+<body>
+    <div>
+        <label><b>register</b></label>
+    </div>
+    <div class="input-group">
+        <label><b>username</b></label>
+        <br>
+        <input type="text" id="registerUsername">
+        <br>
+        <label><b>password</b></label>
+        <br>
+        <input type="password" id="registerPassword">
+    </div>
+    <button type="button" id="register" class="btn-submit" >
+    submit</button>
+    <button type="button" id="register_cancel" class="btn-submit" 
+    onclick="javascript:window.location.href='/login'">
+    cancel</button>
+    <!--<script type="text/javascript" src="<%= Routes.static_path(@conn, "/register.js") %>"></script-->
+</body>
+
+
+</html>

@@ -1,5 +1,5 @@
-defmodule Proj42Web.Router do
-  use Proj42Web, :router
+defmodule TestWeb.Router do
+  use TestWeb, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -13,18 +13,14 @@ defmodule Proj42Web.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", Proj42Web do
+  scope "/", TestWeb do
     pipe_through :browser
 
     get "/", PageController, :index
-
-    get "/register", PageController, :register
-    get "/login", PageController, :login
-    get "/main", PageController, :main
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", Proj42Web do
+  # scope "/api", TestWeb do
   #   pipe_through :api
   # end
 end

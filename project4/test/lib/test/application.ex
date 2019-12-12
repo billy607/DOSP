@@ -1,4 +1,4 @@
-defmodule Proj42.Application do
+defmodule Test.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -9,24 +9,23 @@ defmodule Proj42.Application do
     # List all child processes to be supervised
     children = [
       # Start the Ecto repository
-      Proj42.Repo,
+      Test.Repo,
       # Start the endpoint when the application starts
-      Proj42Web.Endpoint,
-      # Starts a worker by calling: Proj42.Worker.start_link(arg)
-      # {Proj42.Worker, arg},
-      {Engine,[]}
+      TestWeb.Endpoint
+      # Starts a worker by calling: Test.Worker.start_link(arg)
+      # {Test.Worker, arg},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Proj42.Supervisor]
+    opts = [strategy: :one_for_one, name: Test.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   def config_change(changed, _new, removed) do
-    Proj42Web.Endpoint.config_change(changed, removed)
+    TestWeb.Endpoint.config_change(changed, removed)
     :ok
   end
 end
