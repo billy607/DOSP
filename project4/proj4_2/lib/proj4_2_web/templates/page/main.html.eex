@@ -18,12 +18,14 @@
             <button id="logout">logout</button>
         </div>
     </div>
-    <div>
-        <input id="search_content"/>
+    <div style="margin:auto">
+        <input id="search_content" style="width:200px; height:30px; margin:auto"/>
         <button id="search">search</button>
+        <input id="subscribe_content" style="width:200px; height:30px; margin:auto"/>
+        <button id="subscribe">subscribe</button>
     </div>
-    <div id="chat-box">
-        <p id="content"><b>hhh</p>
+    <div id="chat-box"  style="height:300px; width:500px; overflow:auto; margin:auto" >
+        <p id="content"><b>Tweets</p>
     </div>
 
     <div id="chat-form">

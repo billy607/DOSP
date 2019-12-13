@@ -24,6 +24,30 @@ defmodule Proj42Web.ServerChannel do
       {:reply, {:ok,%{flag: flag}}, socket}
     end
 
+    def handle_in("subscribe", %{"body" => body}, socket) do
+      userName = List.first(body)
+      subscribedName = Enum.at(body,1)
+      flag =
+      if !Enum.empty?(:ets.lookup(:user,subscribedName)) do
+        Engine.subscribe(EngineServer,userName,subscribedName)
+        true
+      else
+        false
+      end
+      IO.inspect(flag)
+      {:reply, {:ok,%{flag: flag}}, socket}
+    end
+
+    def handle_in("init", %{"body" => body}, socket) do
+      tPid = socket.transport_pid
+      userName = List.first(body)
+      passWord = Enum.at(body,1)
+      flag = Engine.login(EngineServer,userName,passWord,tPid)
+      
+      flag=Enum.uniq(Enum.at(flag,1)++Enum.at(flag,2))
+      {:reply, {:ok,%{flag: [true,flag]}}, socket}
+    end
+
     def handle_in("logout", %{"body" => body}, socket) do
       userName = List.first(body)
       passWord = Enum.at(body,1)
@@ -53,7 +77,9 @@ defmodule Proj42Web.ServerChannel do
 
       Engine.send_tweet(EngineServer,userName,content,mentions,hashTags,socket)
 
-      broadcast(socket,"transport",%{"userID" => mentions,"hashTag" => hashTags, "content" => content})
+      followers=List.flatten(:ets.match(:subscribe,{:"$1",userName}))
+
+      broadcast(socket,"transport",%{"userID" => mentions,"follower" => followers, "hashTag" => hashTags, "senderName" => userName ,"content" => content})
       {:noreply, socket}
     end
 

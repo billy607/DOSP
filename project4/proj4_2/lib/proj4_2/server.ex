@@ -78,7 +78,7 @@ defmodule Engine do
       #IO.inspect(mention_user,label: "mention users (in send tweet)")
       if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
+        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
       end
     end)
     #subscribe
@@ -87,7 +87,7 @@ defmodule Engine do
       follower=:ets.lookup(:user,x)
       if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
+        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
       end
     end)
     {:noreply, List.replace_at(state,1,tweet_id+1)}
@@ -112,11 +112,12 @@ defmodule Engine do
     end)
     #subscribe
     followers=List.flatten(:ets.match(:subscribe,{:"$1",uid}))
-    Enum.each(followers,fn(x)->
+    Enum.map(followers,fn(x)->
       follower=:ets.lookup(:user,x)
       if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
         #send to client
-        Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
+        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
+
       end
     end)
     {:noreply, List.replace_at(state,1,tweet_id+1)}
@@ -164,7 +165,16 @@ defmodule Engine do
       :ets.insert(:user, {uid,pwd,ip,1})
       #deliver subscribed users' tweets and tweets mentiond
       subscribed_users = List.flatten(:ets.match(:subscribe,{uid,:"$1"}))
-      tweet_list_subscribe = Enum.map(subscribed_users, fn(x)->List.flatten(Tuple.to_list(List.first(:ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})))) end)
+      tweet_list_subscribe = []
+      k=[]
+      k = Enum.map(subscribed_users, fn(x)->
+        k ++ :ets.match_object(:tweet,{:"$3",x,:"$2",:"$1"})
+      end)
+      k=List.flatten(k)
+      tweet_list_subscribe = Enum.map(k,fn(x)->
+        tweet_list_subscribe ++ Tuple.to_list(x)
+      end)
+      IO.inspect(tweet_list_subscribe)
       mention_tweets_id = List.flatten(:ets.match(:mention,{:"$1",uid}))
       tweet_list_mention = Enum.map(mention_tweets_id, fn(x) ->
         List.flatten(Tuple.to_list(List.first(:ets.lookup(:tweet,x))))
