@@ -5,7 +5,7 @@ defmodule Engine do
   #tweet:[tweet_id,publisher_id,content,retweet_id]
   #mention:[tweet_id,user_id(mention)]
   #hashTags:[hashtag,tweet_id]
-  def start_link(a) do
+  def start_link(_a) do
     GenServer.start_link(__MODULE__,:ok,name: EngineServer)
   end
 
@@ -15,7 +15,17 @@ defmodule Engine do
     :ets.new(:tweet, [:set, :protected, :named_table])
     :ets.new(:mention, [:bag, :protected, :named_table])
     :ets.new(:hashTags, [:bag, :protected, :named_table])
-    {:ok,[0,0]}#[user_num,tweet_num]
+    Enum.map(1..100,fn x -> 
+      :ets.insert(:user,{Integer.to_string(x),"a",x,0})
+    end)
+    Enum.map(2..100,fn x ->
+      :ets.insert(:subscribe,{"1",Integer.to_string(x)})
+    end)
+    Enum.map(2..100,fn x ->
+      :ets.insert(:tweet,{x-1,Integer.to_string(x),"I am "<>Integer.to_string(x),nil})
+    end)
+
+    {:ok,[100,99]}#[user_num,tweet_num]
   end
 
   def find(tName,key) do
@@ -54,8 +64,8 @@ defmodule Engine do
     GenServer.call(pid,{:query,type,content})
   end
 
-  def retweet(pid,uid,content,mention,hashTags,retweetId) do
-    GenServer.cast(pid,{:re_tweet, uid,content,mention,hashTags,retweetId})
+  def retweet(pid,uid,content,mention,hashTags,retweetId,socket) do
+    GenServer.cast(pid,{:re_tweet, uid,content,mention,hashTags,retweetId,socket})
   end
 
 
@@ -64,32 +74,30 @@ defmodule Engine do
     {:noreply, state}
   end
 
-  def handle_cast({:re_tweet, uid,content,mention,hashTags,retweetId},state) do
+  def handle_cast({:re_tweet, uid,content,mention,hashTags,retweetId,socket},state) do
     tweet_id=List.last(state)
+
+    oriContent = Enum.at(Tuple.to_list(hd(:ets.lookup(:tweet,retweetId))),2)
+    oriPublisher = Enum.at(Tuple.to_list(hd(:ets.lookup(:tweet,retweetId))),1)
+
+    content = content<>" // "<>oriPublisher<>": "<>oriContent
+    
+    IO.inspect(content,label: " content")
+
     :ets.insert(:tweet,{tweet_id,uid,content,retweetId})
     #hashtag
     Enum.each(hashTags,fn(x)->
       :ets.insert(:hashTags,{x,tweet_id})
     end)
     #mention
-    Enum.each(mention,fn(x)->
+    Enum.map(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
-      mention_user=:ets.lookup(:user,x)
-      #IO.inspect(mention_user,label: "mention users (in send tweet)")
-      if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
-        #send to client
-        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
-      end
     end)
     #subscribe
     followers=List.flatten(:ets.match(:subscribe,{:"$1",uid}))
-    Enum.each(followers,fn(x)->
-      follower=:ets.lookup(:user,x)
-      if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
-        #send to client
-        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
-      end
-    end)
+    #IO.inspect(%{"userID" => mention,"follower" => followers, "hashTag" => hashTags, "senderName" => uid ,"tweet" => [tweet_id,content]},label: "transport content")
+    IO.inspect(content,label: "content2")
+    Phoenix.Channel.broadcast(socket,"transport",%{"userID" => mention++[uid],"follower" => followers, "hashTag" => hashTags, "senderName" => uid ,"tweet" => [tweet_id,content]})
     {:noreply, List.replace_at(state,1,tweet_id+1)}
   end
 
@@ -101,25 +109,13 @@ defmodule Engine do
       :ets.insert(:hashTags,{x,tweet_id})
     end)
     #mention
-    Enum.each(mention,fn(x)->
+    Enum.map(mention,fn(x)->
       :ets.insert(:mention,{tweet_id,x}) 
-      mention_user=:ets.lookup(:user,x)
-      #IO.inspect(mention_user,label: "mention users (in send tweet)")
-      if !Enum.empty?(mention_user)&&Enum.at(Tuple.to_list(List.first(mention_user)),3)==1 do
-        #send to client
-        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(mention_user)),2),[tweet_id,uid,content,nil],1)
-      end
     end)
     #subscribe
     followers=List.flatten(:ets.match(:subscribe,{:"$1",uid}))
-    Enum.map(followers,fn(x)->
-      follower=:ets.lookup(:user,x)
-      if !Enum.empty?(follower)&&Enum.at(Tuple.to_list(List.first(follower)),3)==1 do
-        #send to client
-        #Client.receive_tweet(Enum.at(Tuple.to_list(List.first(follower)),2),[tweet_id,uid,content,nil],0)
-
-      end
-    end)
+    #IO.inspect(%{"userID" => mention,"follower" => followers, "hashTag" => hashTags, "senderName" => uid ,"tweet" => [tweet_id,content]},label: "transport content")
+    Phoenix.Channel.broadcast(socket,"transport",%{"userID" => mention++[uid],"follower" => followers, "hashTag" => hashTags, "senderName" => uid ,"tweet" => [tweet_id,content,nil]})
     {:noreply, List.replace_at(state,1,tweet_id+1)}
   end
 
@@ -174,12 +170,17 @@ defmodule Engine do
       tweet_list_subscribe = Enum.map(k,fn(x)->
         tweet_list_subscribe ++ Tuple.to_list(x)
       end)
-      IO.inspect(tweet_list_subscribe)
+
+
       mention_tweets_id = List.flatten(:ets.match(:mention,{:"$1",uid}))
       tweet_list_mention = Enum.map(mention_tweets_id, fn(x) ->
         List.flatten(Tuple.to_list(List.first(:ets.lookup(:tweet,x))))
       end)
-      {:reply, [flag,tweet_list_subscribe,tweet_list_mention], state}
+
+      tweet_list_self = List.flatten((:ets.match_object(:tweet,{:"$1",uid,:"$2",:"$3"})))
+      tweet_list_self = Enum.map(tweet_list_self,fn(x)-> Tuple.to_list(x) end)
+
+      {:reply, [flag,tweet_list_self,tweet_list_subscribe,tweet_list_mention], state}
     else
       {:reply, [flag,"invalid username or password!"], state}
     end

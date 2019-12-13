@@ -11,6 +11,10 @@
 <body>
     <div>
         <div >
+            <label id="num">
+                Number of users: 
+                <%=hd(:sys.get_state(EngineServer))%>
+            </label>
             <label id="title">Hello!!!!</label> 
         </div>
         <div>

@@ -20,7 +20,7 @@ defmodule Proj42Web.ServerChannel do
       userName = List.first(body)
       passWord = Enum.at(body,1)
       flag = Engine.login(EngineServer,userName,passWord,tPid)
-      IO.inspect(flag)
+      IO.inspect(flag, label: "when login")
       {:reply, {:ok,%{flag: flag}}, socket}
     end
 
@@ -34,7 +34,7 @@ defmodule Proj42Web.ServerChannel do
       else
         false
       end
-      IO.inspect(flag)
+      IO.inspect(flag, lable: "when subscribe")
       {:reply, {:ok,%{flag: flag}}, socket}
     end
 
@@ -44,7 +44,9 @@ defmodule Proj42Web.ServerChannel do
       passWord = Enum.at(body,1)
       flag = Engine.login(EngineServer,userName,passWord,tPid)
       
-      flag=Enum.uniq(Enum.at(flag,1)++Enum.at(flag,2))
+      flag=Enum.uniq(Enum.at(flag,1)++Enum.at(flag,2))++Enum.at(flag,3)
+
+      #IO.inspect(flag,label: "flag!!@#!@#")
       {:reply, {:ok,%{flag: [true,flag]}}, socket}
     end
 
@@ -52,7 +54,7 @@ defmodule Proj42Web.ServerChannel do
       userName = List.first(body)
       passWord = Enum.at(body,1)
       flag = Engine.logout(EngineServer,userName,passWord)
-      IO.inspect(flag)
+      IO.inspect(flag,label: "when logout")
       {:reply, {:ok,%{flag: flag}}, socket}
     end
 
@@ -60,7 +62,7 @@ defmodule Proj42Web.ServerChannel do
       userName = List.first(body)
       passWord = Enum.at(body,1)
       flag = Engine.delete(EngineServer,userName,passWord)
-      IO.inspect(flag)
+      IO.inspect(flag,label: "when delete")
       {:reply, {:ok,%{flag: flag}}, socket}
     end
 
@@ -77,10 +79,35 @@ defmodule Proj42Web.ServerChannel do
 
       Engine.send_tweet(EngineServer,userName,content,mentions,hashTags,socket)
 
-      followers=List.flatten(:ets.match(:subscribe,{:"$1",userName}))
-
-      broadcast(socket,"transport",%{"userID" => mentions,"follower" => followers, "hashTag" => hashTags, "senderName" => userName ,"content" => content})
+      #get tweet id
       {:noreply, socket}
+    end
+
+    def handle_in("reTweet", %{"body" => body}, socket) do
+      userName = List.first(body)
+      content = Enum.at(body,1)
+      oriId = Enum.at(body,2)
+      {oriId,""} = Integer.parse(oriId)
+      tmp = List.flatten(Regex.scan(~r/#.*?\s/, content))
+      #IO.inspect(tmp,label: "tmp")
+      hashTags = Enum.map(tmp, fn(x) -> Regex.replace(~r/#|\s/,x,"") end)
+
+      tmp = List.flatten(Regex.scan(~r/@.*?\s/, content))
+      mentions = Enum.map(tmp, fn(x) -> Regex.replace(~r/@|\s/,x,"") end)
+
+      Engine.retweet(EngineServer,userName,content,mentions,hashTags,oriId,socket)
+
+      #get tweet id
+      {:noreply, socket}
+    end
+
+    def handle_in("search", %{"body" => body}, socket) do
+      userName = List.first(body)
+      content = Enum.at(body,1)
+      type = Enum.at(body,2)
+      flag = Engine.query(EngineServer,type,content)
+      IO.inspect(flag,label: "when query")
+      {:reply, {:ok,%{flag: flag}}, socket}
     end
 
   end
