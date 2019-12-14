@@ -28,6 +28,12 @@ defmodule Engine do
     {:ok,[100,99]}#[user_num,tweet_num]
   end
 
+  def demo() do
+    Enum.map(1..99,fn x -> 
+      Engine.send_tweet(EngineServer,Integer.to_string(x) ,"hello",[],[],nil)
+    end)
+  end
+
   def find(tName,key) do
     :ets.lookup(tName,key)
   end
